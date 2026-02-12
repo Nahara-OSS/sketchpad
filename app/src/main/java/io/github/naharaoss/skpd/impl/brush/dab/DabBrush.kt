@@ -3,12 +3,16 @@ package io.github.naharaoss.skpd.impl.brush.dab
 import io.github.naharaoss.skpd.engine.brush.Brush
 import io.github.naharaoss.skpd.engine.brush.Dynamic
 import io.github.naharaoss.skpd.engine.brush.Sensor
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import java.nio.ByteBuffer
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sqrt
 
+@Serializable
+@SerialName("dab")
 data class DabBrush(
     /**
      * The shape of the brush. The shape produces a bitmap, which will then be used for stamping to
@@ -61,12 +65,15 @@ data class DabBrush(
      */
     val scatterY: Dynamic,
 ) : Brush {
-    interface Shape {
+    @Serializable
+    sealed interface Shape {
         val bitmapWidth: Int
         val bitmapHeight: Int
 
         fun writeBitmap(dst: ByteBuffer)
 
+        @Serializable
+        @SerialName("square")
         object Square : Shape {
             override val bitmapWidth: Int get() = 1
             override val bitmapHeight: Int get() = 1
@@ -77,6 +84,8 @@ data class DabBrush(
             }
         }
 
+        @Serializable
+        @SerialName("circle")
         data class Circle(val hardness: Float) : Shape {
             override val bitmapWidth: Int get() = 64
             override val bitmapHeight: Int get() = 64
