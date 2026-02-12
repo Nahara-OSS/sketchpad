@@ -49,39 +49,61 @@ import io.github.naharaoss.skpd.R
 import kotlinx.serialization.Serializable
 
 @Serializable
-private sealed interface Page {
+sealed interface AppSettingsPage {
     val title: String @Composable get
     val subtitle: String @Composable get
 
     @Serializable
-    object Main : Page {
+    object Main : AppSettingsPage {
         override val title: String @Composable get() = stringResource(R.string.settings_category_main_title)
         override val subtitle: String @Composable get() = stringResource(R.string.settings_category_main_subtitle)
     }
 
     @Serializable
-    object About : Page {
+    object About : AppSettingsPage {
         override val title: String @Composable get() = stringResource(R.string.settings_category_about_title)
         override val subtitle: String @Composable get() = stringResource(R.string.settings_category_about_subtitle)
     }
 
     @Serializable
-    object Unknown : Page {
+    object Unknown : AppSettingsPage {
         override val title: String @Composable get() = "Huh?"
         override val subtitle: String @Composable get() = "How did you get here?"
     }
+}
+
+@Composable
+fun AppSettingsScreen(
+    modifier: Modifier = Modifier,
+    settings: AppSettings,
+    onSettingsChange: (AppSettings) -> Unit,
+    onBack: (() -> Unit)? = null
+) {
+    // TODO: implement parcel and use saveable
+    val backStack = remember { mutableStateListOf<AppSettingsPage>(AppSettingsPage.Main) }
+
+    return AppSettingsScreen(
+        modifier = modifier,
+        settings = settings,
+        onSettingsChange = onSettingsChange,
+        backStack = backStack,
+        onBack = if (backStack.isNotEmpty()) ({ backStack.removeLastOrNull(); Unit }) else onBack,
+        onNavigate = { backStack.add(it) }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AppSettingsScreen(
     modifier: Modifier = Modifier,
+    backStack: List<AppSettingsPage>,
+    onBack: (() -> Unit)? = null,
+    onNavigate: (AppSettingsPage) -> Unit,
     settings: AppSettings,
     onSettingsChange: (AppSettings) -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val backStack = remember { mutableStateListOf<Page>(Page.Main) } // TODO: implement parcel and use saveable
-    val currentPage = backStack.lastOrNull() ?: Page.Unknown
+    val currentPage = backStack.lastOrNull() ?: AppSettingsPage.Unknown
     val spatialSpec = MaterialTheme.motionScheme.slowSpatialSpec<Float>()
     val effectsSpec = MaterialTheme.motionScheme.slowEffectsSpec<Float>()
     val spatialSpecInt = MaterialTheme.motionScheme.slowSpatialSpec<IntOffset>()
@@ -117,15 +139,16 @@ fun AppSettingsScreen(
                 },
                 navigationIcon = {
                     AnimatedContent(
-                        targetState = backStack.size > 1,
+                        targetState = onBack,
+                        contentKey = { it != null },
                         transitionSpec = {
-                            val enter = slideInVertically(spatialSpecInt) { if (targetState) -it else it } + fadeIn(effectsSpec)
-                            val exit = slideOutVertically(spatialSpecInt) { if (targetState) it else -it } + fadeOut(effectsSpec)
+                            val enter = slideInVertically(spatialSpecInt) { if (targetState != null) -it else it } + fadeIn(effectsSpec)
+                            val exit = slideOutVertically(spatialSpecInt) { if (targetState != null) it else -it } + fadeOut(effectsSpec)
                             (enter togetherWith exit).using(SizeTransform(clip = false))
                         }
-                    ) { showButton ->
-                        if (showButton) {
-                            IconButton({ backStack.removeLastOrNull() }) {
+                    ) { onBack ->
+                        if (onBack != null) {
+                            IconButton(onBack) {
                                 Icon(
                                     painter = painterResource(R.drawable.arrow_back_24px),
                                     contentDescription = null
@@ -153,20 +176,20 @@ fun AppSettingsScreen(
                     scaleOut(spatialSpec, 0.75f) + fadeOut(effectsSpec)
                 )
             },
-            onBack = { backStack.removeLastOrNull() },
+            onBack = onBack ?: {},
             entryProvider = { key ->
                 when (key) {
-                    is Page.Main -> NavEntry(key) {
+                    is AppSettingsPage.Main -> NavEntry(key) {
                         MainPage(
-                            onAbout = { backStack.add(Page.About) }
+                            onAbout = { onNavigate(AppSettingsPage.About) }
                         )
                     }
 
-                    is Page.About -> NavEntry(key) {
+                    is AppSettingsPage.About -> NavEntry(key) {
                         AboutPage()
                     }
 
-                    else -> NavEntry(Page.Unknown) {
+                    else -> NavEntry(AppSettingsPage.Unknown) {
                         // we can crash the app here
                         Box(modifier = Modifier.fillMaxSize()) {
                             Text("Unknown route")
