@@ -1,6 +1,14 @@
 <resources>
     <string name="app_name">Sketchpad</string>
+    <string name="app_name_full">Nahara\'s Sketchpad</string>
+    <string name="app_license">MIT License</string> <!-- Do we turn this into resValue()? -->
     <string name="brush_sensor_pressure">Pressure</string>
     <string name="brush_sensor_speed">Speed</string>
     <string name="brush_sensor_jitter">Jitter (Random)</string>
+    <string name="settings_category_main_title">Settings</string>
+    <string name="settings_category_main_subtitle">Edit and review app settings</string>
+    <string name="settings_category_about_title">About Sketchpad</string>
+    <string name="settings_category_about_subtitle">View app version, credits and licenses</string>
+    <string name="settings_about_version_title">App version</string>
+    <string name="settings_about_version_subtitle">Version %s (git %s)</string>
 </resources>
