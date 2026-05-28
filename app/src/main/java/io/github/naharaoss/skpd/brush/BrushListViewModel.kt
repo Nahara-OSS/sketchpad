@@ -5,13 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.naharaoss.skpd.brush.impl.StampBrush
-import io.github.naharaoss.skpd.resource.ResourceRepository
+import io.github.naharaoss.skpd.resource.BrushRepository
 import jakarta.inject.Inject
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class BrushListViewModel @Inject constructor(
-    private val resourceRepository: ResourceRepository
+    private val resourceRepository: BrushRepository
 ): ViewModel() {
     val brushes = resourceRepository.brushes
 

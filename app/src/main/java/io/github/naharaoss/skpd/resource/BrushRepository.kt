@@ -4,7 +4,6 @@ import io.github.naharaoss.skpd.brush.BrushType
 import io.github.naharaoss.skpd.utils.ApplicationScope
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -15,7 +14,7 @@ import javax.inject.Singleton
 import kotlin.concurrent.withLock
 
 @Singleton
-class ResourceRepository @Inject constructor(
+class BrushRepository @Inject constructor(
     private val databaseProvider: AppDatabaseProvider,
     private val store: ResourceContentStore,
     @param:ApplicationScope private val scope: CoroutineScope,
