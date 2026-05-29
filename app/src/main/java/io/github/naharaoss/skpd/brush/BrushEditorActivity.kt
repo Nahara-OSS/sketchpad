@@ -17,16 +17,21 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -45,8 +50,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation3.runtime.entryProvider
@@ -197,47 +205,122 @@ class BrushEditorActivity : ComponentActivity() {
 
                     Row {
                         Box(Modifier.background(MaterialTheme.colorScheme.surfaceVariant)) {
-                            Surface(
-                                modifier = Modifier
-                                    .padding(end = 8.dp)
-                                    .consumeWindowInsets(TopAppBarDefaults.windowInsets.only(WindowInsetsSides.End)),
-//                                shape = RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp)
-                            ) {
-                                SharedTransitionLayout {
-                                    NavDisplay(
-                                        backStack = backStack,
-                                        sceneStrategies = listOf(BrushEditorSceneStrategy(windowSizeClass)),
-                                        sizeTransform = SizeTransform(
-                                            clip = true,
-                                            sizeAnimationSpec = { _, _ -> sizeMotion }
-                                        ),
-                                        sharedTransitionScope = this,
-                                        transitionSpec = {
-                                            val enter = fadeIn(fadeMotion) + slideInHorizontally(slideMotion) { it / 4 }
-                                            val exit = fadeOut(fadeMotion) + slideOutHorizontally(slideMotion) { it / -4 }
-                                            enter togetherWith exit
-                                        },
-                                        popTransitionSpec = {
-                                            val enter = fadeIn(fadeMotion) + slideInHorizontally(slideMotion) { it / -4 }
-                                            val exit = fadeOut(fadeMotion) + slideOutHorizontally(slideMotion) { it / 4 }
-                                            enter togetherWith exit
-                                        },
-                                        predictivePopTransitionSpec = { edge ->
-                                            val edgeMul = when (edge) {
-                                                NavigationEvent.EDGE_LEFT -> -1
-                                                NavigationEvent.EDGE_RIGHT -> +1
-                                                else -> -1
-                                            }
+                            SharedTransitionLayout(Modifier.padding(end = 8.dp)) {
+                                NavDisplay(
+                                    backStack = backStack,
+                                    sceneStrategies = listOf(BrushEditorSceneStrategy(windowSizeClass)),
+                                    sizeTransform = SizeTransform(
+                                        clip = true,
+                                        sizeAnimationSpec = { _, _ -> sizeMotion }
+                                    ),
+                                    sharedTransitionScope = this,
+                                    transitionSpec = {
+                                        val enter = fadeIn(fadeMotion) + slideInHorizontally(slideMotion) { it / 4 }
+                                        val exit = fadeOut(fadeMotion) + slideOutHorizontally(slideMotion) { it / -4 }
+                                        enter togetherWith exit
+                                    },
+                                    popTransitionSpec = {
+                                        val enter = fadeIn(fadeMotion) + slideInHorizontally(slideMotion) { it / -4 }
+                                        val exit = fadeOut(fadeMotion) + slideOutHorizontally(slideMotion) { it / 4 }
+                                        enter togetherWith exit
+                                    },
+                                    predictivePopTransitionSpec = { edge ->
+                                        val edgeMul = when (edge) {
+                                            NavigationEvent.EDGE_LEFT -> -1
+                                            NavigationEvent.EDGE_RIGHT -> +1
+                                            else -> -1
+                                        }
 
-                                            val enter = fadeIn(fadeMotion) + slideInHorizontally(slideMotion) { it * edgeMul / 4 }
-                                            val exit = fadeOut(fadeMotion) + slideOutHorizontally(slideMotion) { it * edgeMul / -4 }
-                                            enter togetherWith exit
-                                        },
-                                        onBack = { goBack() },
-                                        entryProvider = entryProvider
-                                    )
-                                }
+                                        val enter = fadeIn(fadeMotion) + slideInHorizontally(slideMotion) { it * edgeMul / 4 }
+                                        val exit = fadeOut(fadeMotion) + slideOutHorizontally(slideMotion) { it * edgeMul / -4 }
+                                        enter togetherWith exit
+                                    },
+                                    onBack = { goBack() },
+                                    entryProvider = entryProvider
+                                )
                             }
+                        }
+
+                        Column {
+                            Box(
+                                modifier = Modifier
+                                    .width(16.dp)
+                                    .height(16.dp)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.surfaceVariant,
+                                        shape = GenericShape({ size, direction ->
+                                            when (direction) {
+                                                LayoutDirection.Ltr -> {
+                                                    moveTo(0f, 0f)
+                                                    lineTo(size.width, 0f)
+                                                    arcTo(
+                                                        rect = Rect(center = Offset(x = size.width, y = size.height), radius = size.width),
+                                                        startAngleDegrees = -90f,
+                                                        sweepAngleDegrees = -90f,
+                                                        forceMoveTo = false
+                                                    )
+                                                    close()
+                                                }
+
+                                                LayoutDirection.Rtl -> {
+                                                    moveTo(size.width, 0f)
+                                                    lineTo(0f, 0f)
+                                                    arcTo(
+                                                        rect = Rect(
+                                                            center = Offset(x = 0f, y = size.height),
+                                                            radius = size.width
+                                                        ),
+                                                        startAngleDegrees = -90f,
+                                                        sweepAngleDegrees = 90f,
+                                                        forceMoveTo = false
+                                                    )
+                                                    close()
+                                                }
+                                            }
+                                        })
+                                    )
+                            )
+
+                            Spacer(Modifier.weight(1f))
+
+                            Box(
+                                modifier = Modifier
+                                    .width(16.dp)
+                                    .height(16.dp)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.surfaceVariant,
+                                        shape = GenericShape({ size, direction ->
+                                            when (direction) {
+                                                LayoutDirection.Ltr -> {
+                                                    moveTo(0f, size.height)
+                                                    lineTo(size.width, size.height)
+                                                    arcTo(
+                                                        rect = Rect(center = Offset(x = size.width, y = 0f), radius = size.width),
+                                                        startAngleDegrees = 90f,
+                                                        sweepAngleDegrees = 90f,
+                                                        forceMoveTo = false
+                                                    )
+                                                    close()
+                                                }
+
+                                                LayoutDirection.Rtl -> {
+                                                    moveTo(size.width, size.height)
+                                                    lineTo(0f, size.height)
+                                                    arcTo(
+                                                        rect = Rect(
+                                                            center = Offset(x = 0f, y = 0f),
+                                                            radius = size.width
+                                                        ),
+                                                        startAngleDegrees = 90f,
+                                                        sweepAngleDegrees = -90f,
+                                                        forceMoveTo = false
+                                                    )
+                                                    close()
+                                                }
+                                            }
+                                        })
+                                    )
+                            )
                         }
 
                         Box(
@@ -246,13 +329,13 @@ class BrushEditorActivity : ComponentActivity() {
                                 .fillMaxWidth()
                         ) {
                             Surface(
-                                modifier = Modifier.padding(16.dp),
+                                modifier = Modifier.padding(0.dp, 16.dp, 16.dp, 16.dp),
                                 shadowElevation = 2.dp,
                                 shape = CircleShape
                             ) {
-                                Box(Modifier.padding(16.dp, 8.dp)) {
+                                Box(Modifier.padding(16.dp, 8.dp).width(IntrinsicSize.Max)) {
                                     CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.bodyMedium) {
-                                        Text("Test area")
+                                        Text("Test area", softWrap = false)
                                     }
                                 }
                             }
