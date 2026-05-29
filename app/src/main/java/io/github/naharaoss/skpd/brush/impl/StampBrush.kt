@@ -27,7 +27,6 @@ import java.util.UUID
 import kotlin.math.PI
 import kotlin.math.pow
 import kotlin.math.roundToInt
-import kotlin.random.Random
 
 /**
  * Stamp-based brush family.
@@ -629,7 +628,6 @@ object StampBrush : BrushType<StampBrush.Preset> {
         var color: Color = Color.Black
         var falloffGraph: GLTexture2D? = null
         var lastInput: StylusInput? = null
-        var strokeJitter = 0f
         val tiles = mutableMapOf<Any, InternalTile>()
         var stampCount = 0
         var stamps = ByteBuffer.allocateDirect(16384).order(ByteOrder.nativeOrder())
@@ -667,7 +665,6 @@ object StampBrush : BrushType<StampBrush.Preset> {
 
         override fun beginStroke() {
             lastInput = null
-            strokeJitter = Random.nextFloat()
             tiles.onEach { it.value.close() }.clear()
         }
 
@@ -713,7 +710,6 @@ object StampBrush : BrushType<StampBrush.Preset> {
                     remainingDistance -= spacing
 
                     (1..count).forEach { _ ->
-                        val dabJitter = Random.nextFloat()
                         val stamp = interpolated.toStamp()
                         rect = rect.union(stamp.bounds)
                         pushStamp(stamp)
@@ -748,7 +744,6 @@ object StampBrush : BrushType<StampBrush.Preset> {
                 when (preset.tip) {
                     is Preset.BrushTip.Circle -> circleBrushProgram.use(falloffGraph!!, stamps, stampCount, transform, color)
                     is Preset.BrushTip.Square -> squareBrushProgram.use(falloffGraph!!, stamps, stampCount, transform, color)
-                    else -> TODO("Implement ${preset.tip}")
                 }
             }
         }

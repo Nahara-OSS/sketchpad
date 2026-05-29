@@ -75,6 +75,13 @@ data class StylusInput(
      * required to determine the correct axis.
      */
     val rotation: Float,
+
+    /**
+     * Stroke jitter.
+     *
+     * This value is randomly generated once on stylus down event and applied to entire stroke.
+     */
+    val strokeJitter: Float
 ) {
     infix fun distanceTo(input: StylusInput): Float {
         val dx = input.x - x
@@ -83,7 +90,7 @@ data class StylusInput(
     }
 
     companion object {
-        fun fromMotionEvent(prev: StylusInput?, next: MotionEvent): StylusInput {
+        fun fromMotionEvent(prev: StylusInput?, next: MotionEvent, strokeJitter: Float): StylusInput {
             val x = next.x
             val y = next.y
             val dx = if (prev != null) x - prev.x else 0f
@@ -97,7 +104,7 @@ data class StylusInput(
             val altitude = next.getAxisValue(MotionEvent.AXIS_TILT)
             val azimuth = next.getAxisValue(MotionEvent.AXIS_ORIENTATION)
             val rotation = 0f
-            return StylusInput(time, x, y, velocity, pressure, altitude, azimuth, rotation)
+            return StylusInput(time, x, y, velocity, pressure, altitude, azimuth, rotation, strokeJitter)
         }
     }
 }
@@ -111,4 +118,5 @@ fun lerp(a: StylusInput, b: StylusInput, fraction: Float) = StylusInput(
     altitude = lerp(a.altitude, b.altitude, fraction),
     azimuth = lerp(a.azimuth, b.azimuth, fraction), // FIXME: Circle lerp
     rotation = lerp(a.rotation, b.rotation, fraction), // FIXME: Circle lerp
+    strokeJitter = b.strokeJitter
 )

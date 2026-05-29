@@ -9,6 +9,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
+import kotlin.random.Random
 
 @Serializable
 sealed interface Sensor {
@@ -138,9 +139,7 @@ sealed interface Sensor {
     object StrokeJitter : Sensor {
         override val nameRes: Int = R.string.sensor_stroke_jitter
         override val iconRes: Int = R.drawable.icon_123_24px
-        override fun forInput(input: StylusInput): Float {
-            TODO("Not yet implemented")
-        }
+        override fun forInput(input: StylusInput): Float = input.strokeJitter
     }
 
     /**
@@ -151,8 +150,6 @@ sealed interface Sensor {
     object DabJitter : Sensor {
         override val nameRes: Int = R.string.sensor_dab_jitter
         override val iconRes: Int = R.drawable.icon_123_24px
-        override fun forInput(input: StylusInput): Float {
-            TODO("Not yet implemented")
-        }
+        override fun forInput(input: StylusInput): Float = Random.nextFloat()
     }
 }

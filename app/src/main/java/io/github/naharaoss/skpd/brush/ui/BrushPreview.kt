@@ -5,7 +5,6 @@ import android.content.Context
 import android.graphics.SurfaceTexture
 import android.opengl.EGL14
 import android.opengl.EGLConfig
-import android.util.Log
 import android.view.TextureView
 import androidx.compose.foundation.style.ExperimentalFoundationStyleApi
 import androidx.compose.material3.LocalContentColor
@@ -161,7 +160,8 @@ private class BrushPreviewRenderThread(
                 val altitude = 90f
                 val azimuth = 0f
                 val rotation = 0f
-                val input = StylusInput(time, x, y, velocity, pressure, altitude, azimuth, rotation)
+                val strokeJitter = 0f
+                val input = StylusInput(time, x, y, velocity, pressure, altitude, azimuth, rotation, strokeJitter)
                 brushRenderer.consumeInput(input)
                 brushRenderer.consumeTile(
                     tileKey = Unit,

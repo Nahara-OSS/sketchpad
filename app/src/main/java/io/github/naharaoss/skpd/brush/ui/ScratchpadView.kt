@@ -18,6 +18,7 @@ import io.github.naharaoss.skpd.utils.GLFramebuffer
 import io.github.naharaoss.skpd.utils.GLTexture2D
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
+import kotlin.random.Random
 
 class ScratchpadView(context: Context) : GLSurfaceView(context) {
     private val renderer = object : Renderer {
@@ -130,6 +131,7 @@ class ScratchpadView(context: Context) : GLSurfaceView(context) {
     }
 
     private var lastInput: StylusInput? = null
+    private var strokeJitter = 0f
     private var _preset: BrushType.Preset = StampBrush.defaultPreset
     var preset
         get() = _preset
@@ -155,7 +157,8 @@ class ScratchpadView(context: Context) : GLSurfaceView(context) {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 requestUnbufferedDispatch(event)
-                val input = StylusInput.fromMotionEvent(null, event)
+                strokeJitter = Random.nextFloat()
+                val input = StylusInput.fromMotionEvent(null, event, strokeJitter)
                 lastInput = input
 
                 queueEvent {
@@ -168,7 +171,7 @@ class ScratchpadView(context: Context) : GLSurfaceView(context) {
             }
 
             MotionEvent.ACTION_MOVE -> {
-                val input = StylusInput.fromMotionEvent(lastInput, event)
+                val input = StylusInput.fromMotionEvent(lastInput, event, strokeJitter)
                 lastInput = input
 
                 queueEvent {
@@ -180,7 +183,7 @@ class ScratchpadView(context: Context) : GLSurfaceView(context) {
             }
 
             MotionEvent.ACTION_UP -> {
-                val input = StylusInput.fromMotionEvent(lastInput, event)
+                val input = StylusInput.fromMotionEvent(lastInput, event, strokeJitter)
                 lastInput = null
 
                 queueEvent {
