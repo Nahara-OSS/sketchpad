@@ -51,7 +51,7 @@ class DocumentView(context: Context) : GLSurfaceView(context) {
         get() = Matrix(_canvasTransform.values.clone())
         set(value) {
             val value = Matrix(value.values.clone())
-            if (value != _canvasTransform) return
+            if (value == _canvasTransform) return
             _canvasTransform.setFrom(value)
             queueEvent { renderer.setCanvasTransform(value) }
             requestRender()
@@ -206,7 +206,12 @@ class DocumentView(context: Context) : GLSurfaceView(context) {
             val layerRenderer = documentRenderer.layers[layer] ?: return
             val clipPosition = Offset(x = input.x * 2f / width - 1f, y = 1f - input.y * 2f / height)
             val worldToClip = Matrix().apply { scale(x = 2f / width, y = -2f / height) }
-            val clipToCanvas = Matrix(worldToClip.values.clone()).apply { this *= canvasTransform; invert() }
+
+            val clipToCanvas = Matrix()
+            clipToCanvas *= canvasTransform
+            clipToCanvas *= worldToClip
+            clipToCanvas.invert()
+
             val canvasPosition = clipToCanvas.map(clipPosition)
             val input = input.copy(x = canvasPosition.x, y = canvasPosition.y)
             val affectedRect = brushRenderer.consumeInput(input)

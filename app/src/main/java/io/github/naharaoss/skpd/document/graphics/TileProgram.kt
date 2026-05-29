@@ -22,13 +22,14 @@ class TileProgram : AutoCloseable {
             vec2(1.0, 1.0)
         );
         
+        uniform float uTileSize;
         uniform mat4 uWorldToClip;
         uniform mat4 uCanvasTransform;
         uniform vec2 uTilePosition;
         out vec2 fUV;
         
         void main() {
-            gl_Position = uWorldToClip * uCanvasTransform * vec4(QUAD_UVS[gl_VertexID] + uTilePosition, 0.0, 1.0);
+            gl_Position = uWorldToClip * uCanvasTransform * vec4((QUAD_UVS[gl_VertexID] + uTilePosition) * uTileSize, 0.0, 1.0);
             fUV = QUAD_UVS[gl_VertexID];
         }
     """.trimIndent())
@@ -48,6 +49,7 @@ class TileProgram : AutoCloseable {
 
     private val program = GLProgram(vertexShader, fragmentShader)
 
+    private val uTileSize = program.uniformLocationOf("uTileSize")
     private val uWorldToClip = program.uniformLocationOf("uWorldToClip")
     private val uCanvasTransform = program.uniformLocationOf("uCanvasTransform")
     private val uTilePosition = program.uniformLocationOf("uTilePosition")
@@ -61,9 +63,13 @@ class TileProgram : AutoCloseable {
         tileAddress: TileAddress
     ) {
         program.use {
+            uTileSize?.let {
+                GLES30.glUniform1f(it, tileSize.toFloat())
+            }
+
             uWorldToClip?.let {
                 val worldToClip = Matrix()
-                worldToClip.scale(x = tileSize * 2f / viewport.width, y = tileSize * -2f / viewport.height)
+                worldToClip.scale(x = 2f / viewport.width, y = -2f / viewport.height)
                 GLES30.glUniformMatrix4fv(it, 1, false, worldToClip.values, 0)
             }
 

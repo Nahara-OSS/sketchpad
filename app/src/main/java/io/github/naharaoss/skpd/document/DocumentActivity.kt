@@ -1,6 +1,7 @@
 package io.github.naharaoss.skpd.document
 
 import android.os.Bundle
+import android.util.Log
 import android.view.WindowInsets
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -38,7 +39,6 @@ class DocumentActivity : ComponentActivity() {
 
         setContent {
             var transform by remember { mutableStateOf(Matrix()) }
-            val windowSize = LocalWindowInfo.current.containerSize
 
             SketchpadTheme {
                 AndroidView(
@@ -48,6 +48,12 @@ class DocumentActivity : ComponentActivity() {
                     it.document = documentViewModel.document
                     it.brushPreset = StampBrush.defaultPreset
                     it.brushColor = Color.Black
+                    it.canvasTransform = transform
+                    it.onTransform = {
+                        val m = Matrix(transform.values.clone())
+                        m *= it
+                        transform = m
+                    }
                 }
             }
         }

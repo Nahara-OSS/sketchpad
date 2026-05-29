@@ -1,6 +1,7 @@
 package io.github.naharaoss.skpd.brush
 
 import android.view.MotionEvent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Matrix
 import kotlin.random.Random
 
@@ -57,6 +58,44 @@ abstract class InputProcessor(
                 }
 
                 return listOf(Action.Stylus(input, kind, eraser))
+            }
+        },
+
+        object : Subprocessor {
+            private var lastPosition: Offset? = null
+
+            override fun updateState(event: MotionEvent): List<Action>? {
+                if (event.pointerCount != 1 || event.getToolType(0) != MotionEvent.TOOL_TYPE_FINGER) {
+                    lastPosition = null
+                    return null
+                }
+
+                val position = Offset(event.x, event.y)
+                val lastPosition = lastPosition
+
+                return when {
+                    event.actionMasked == MotionEvent.ACTION_DOWN -> {
+                        this.lastPosition = position
+                        emptyList()
+                    }
+
+                    event.actionMasked == MotionEvent.ACTION_UP -> {
+                        this.lastPosition = null
+                        emptyList()
+                    }
+
+                    lastPosition != null -> {
+                        val delta = position - lastPosition
+                        val matrix = Matrix()
+                        matrix.translate(x = delta.x, y = delta.y)
+                        this.lastPosition = position
+                        listOf(Action.Transform(matrix))
+                    }
+
+                    else -> {
+                        emptyList()
+                    }
+                }
             }
         }
     )
