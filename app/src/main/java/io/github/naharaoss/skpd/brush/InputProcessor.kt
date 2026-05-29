@@ -5,8 +5,8 @@ import androidx.compose.ui.graphics.Matrix
 import kotlin.random.Random
 
 abstract class InputProcessor(
-    private var fingerDrawing: Boolean,
-    private var touchSlop: Float = 0f
+    var fingerDrawing: Boolean,
+    var touchSlop: Float = 0f
 ) {
     protected abstract fun requestUnbufferedDispatch(event: MotionEvent)
 

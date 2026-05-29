@@ -737,6 +737,7 @@ object StampBrush : BrushType<StampBrush.Preset> {
             val transform = Matrix()
             transform.scale(x = 2f / tileRect.width, y = -2f / tileRect.height)
             transform.translate(x = tileRect.width / -2f, y = tileRect.height / -2f)
+            transform.translate(x = -tileRect.left, y = -tileRect.top)
 
             tile.framebuffer.bind {
                 setViewport(0, 0, tileRect.width.toInt(), tileRect.height.toInt())

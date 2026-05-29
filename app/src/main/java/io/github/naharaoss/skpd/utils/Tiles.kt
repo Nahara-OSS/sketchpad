@@ -1,6 +1,5 @@
 package io.github.naharaoss.skpd.utils
 
-import android.util.Log
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Matrix
@@ -35,7 +34,16 @@ data class TileAddress(
      * Called as "Z", but this is for the frame number of the tile.
      */
     val z: Int
-)
+) {
+    fun calculateTileRect(tileSize: Int): Rect {
+        val tileSize = tileSize.toFloat()
+
+        return Rect(
+            topLeft = Offset(x = x * tileSize, y = y * tileSize),
+            bottomRight = Offset(x = (x + 1) * tileSize, y = (y + 1) * tileSize),
+        )
+    }
+}
 
 fun ByteBuffer.putTileAddress(address: TileAddress): ByteBuffer = this
     .putInt(address.x)
