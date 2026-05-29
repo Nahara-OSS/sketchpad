@@ -11,6 +11,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Matrix
 import io.github.naharaoss.skpd.brush.BrushType
+import io.github.naharaoss.skpd.brush.InputProcessor
 import io.github.naharaoss.skpd.brush.StylusInput
 import io.github.naharaoss.skpd.brush.impl.StampBrush
 import io.github.naharaoss.skpd.utils.GLBlitProgram
@@ -18,7 +19,6 @@ import io.github.naharaoss.skpd.utils.GLFramebuffer
 import io.github.naharaoss.skpd.utils.GLTexture2D
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
-import kotlin.random.Random
 
 class ScratchpadView(context: Context) : GLSurfaceView(context) {
     private val renderer = object : Renderer {
@@ -130,8 +130,14 @@ class ScratchpadView(context: Context) : GLSurfaceView(context) {
         }
     }
 
-    private var lastInput: StylusInput? = null
-    private var strokeJitter = 0f
+//    private var lastInput: StylusInput? = null
+//    private var strokeJitter = 0f
+    private val inputProcessor = object : InputProcessor(fingerDrawing = true, touchSlop = 10f) {
+        override fun requestUnbufferedDispatch(event: MotionEvent) {
+            this@ScratchpadView.requestUnbufferedDispatch(event)
+        }
+    }
+
     private var _preset: BrushType.Preset = StampBrush.defaultPreset
     var preset
         get() = _preset
@@ -154,55 +160,25 @@ class ScratchpadView(context: Context) : GLSurfaceView(context) {
         if (event == null) return super.onTouchEvent(event)
         if (!enableScratchpad) return super.onTouchEvent(event)
 
-        when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> {
-                requestUnbufferedDispatch(event)
-                strokeJitter = Random.nextFloat()
-                val input = StylusInput.fromMotionEvent(null, event, strokeJitter)
-                lastInput = input
+        inputProcessor.updateState(event).forEach { action ->
+            when (action) {
+                is InputProcessor.Action.Stylus -> {
+                    queueEvent {
+                        if (action.kind == InputProcessor.Action.Stylus.Kind.Down) renderer.beginStroke()
+                        renderer.consumeInput(action.input)
+                        renderer.consumeTile()
+                        if (action.kind == InputProcessor.Action.Stylus.Kind.Up) renderer.endStroke()
+                    }
 
-                queueEvent {
-                    renderer.beginStroke()
-                    renderer.consumeInput(input)
-                    renderer.consumeTile()
+                    requestRender()
                 }
 
-                requestRender()
-            }
-
-            MotionEvent.ACTION_MOVE -> {
-                val input = StylusInput.fromMotionEvent(lastInput, event, strokeJitter)
-                lastInput = input
-
-                queueEvent {
-                    renderer.consumeInput(input)
-                    renderer.consumeTile()
+                is InputProcessor.Action.Cancel -> {
+                    queueEvent { renderer.cancelStroke() }
+                    requestRender()
                 }
 
-                requestRender()
-            }
-
-            MotionEvent.ACTION_UP -> {
-                val input = StylusInput.fromMotionEvent(lastInput, event, strokeJitter)
-                lastInput = null
-
-                queueEvent {
-                    renderer.consumeInput(input)
-                    renderer.consumeTile()
-                    renderer.endStroke()
-                }
-
-                requestRender()
-            }
-
-            MotionEvent.ACTION_CANCEL -> {
-                lastInput = null
-
-                queueEvent {
-                    renderer.cancelStroke()
-                }
-
-                requestRender()
+                else -> {}
             }
         }
 

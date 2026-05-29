@@ -90,9 +90,10 @@ data class StylusInput(
     }
 
     companion object {
-        fun fromMotionEvent(prev: StylusInput?, next: MotionEvent, strokeJitter: Float): StylusInput {
-            val x = next.x
-            val y = next.y
+        fun fromMotionEvent(prev: StylusInput?, next: MotionEvent, pointerId: Int, strokeJitter: Float): StylusInput {
+            val i = next.findPointerIndex(pointerId)
+            val x = next.getX(i)
+            val y = next.getY(i)
             val dx = if (prev != null) x - prev.x else 0f
             val dy = if (prev != null) y - prev.y else 0f
             val time = (next.eventTime - next.downTime) / 1000f
@@ -100,9 +101,9 @@ data class StylusInput(
             val vx = if (prev != null) dx / delta else 0f
             val vy = if (prev != null) dy / delta else 0f
             val velocity = sqrt(vx * vx + vy * vy)
-            val pressure = next.getAxisValue(MotionEvent.AXIS_PRESSURE)
-            val altitude = next.getAxisValue(MotionEvent.AXIS_TILT)
-            val azimuth = next.getAxisValue(MotionEvent.AXIS_ORIENTATION)
+            val pressure = next.getAxisValue(MotionEvent.AXIS_PRESSURE, i)
+            val altitude = next.getAxisValue(MotionEvent.AXIS_TILT, i)
+            val azimuth = next.getAxisValue(MotionEvent.AXIS_ORIENTATION, i)
             val rotation = 0f
             return StylusInput(time, x, y, velocity, pressure, altitude, azimuth, rotation, strokeJitter)
         }
