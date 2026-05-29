@@ -15,11 +15,10 @@ import kotlin.concurrent.withLock
 
 @Singleton
 class BrushRepository @Inject constructor(
-    private val databaseProvider: AppDatabaseProvider,
+    private val brushDao: AppDatabase.BrushDao,
     private val store: ResourceContentStore,
     @param:ApplicationScope private val scope: CoroutineScope,
 ) {
-    private val database = databaseProvider.database
     private val _brushes = MutableStateFlow<List<BrushResource>?>(null)
     private val lock = ReentrantLock()
     private var brushesLoadTask: CompletableDeferred<List<BrushResource>>? = null
@@ -32,7 +31,7 @@ class BrushRepository @Inject constructor(
         val newLoadTask = CompletableDeferred<List<BrushResource>>()
         lock.withLock { brushesLoadTask = newLoadTask }
 
-        val brushes = database.brushDao().getAll().map { wrap(it) }
+        val brushes = brushDao.getAll().map { wrap(it) }
         _brushes.value = brushes
         newLoadTask.complete(brushes)
         return _brushes.value ?: brushes
@@ -41,7 +40,7 @@ class BrushRepository @Inject constructor(
     suspend fun createBrush(name: String, icon: String?, preset: BrushType.Preset): BrushResource {
         val reference = UUID.randomUUID().toString()
         val params = AppDatabase.Brush(name = name, icon = icon, reference = reference)
-        val id = database.brushDao().insert(params)
+        val id = brushDao.insert(params)
         val entity = params.copy(brushId = id)
         val resource = wrap(entity)
         resource.store(preset)
@@ -51,11 +50,11 @@ class BrushRepository @Inject constructor(
 
     private fun wrap(entity: AppDatabase.Brush) = object : BrushResource(scope, store, entity.brushId, entity.reference, entity.name, entity.icon) {
         override suspend fun onMetadataUpdate(name: String, icon: String?) {
-            database.brushDao().update(entity.copy(name = name, icon = icon))
+            brushDao.update(entity.copy(name = name, icon = icon))
         }
 
         override suspend fun onDelete() {
-            database.brushDao().delete(entity)
+            brushDao.delete(entity)
             _brushes.update { brushes -> brushes?.filter { it == this } }
         }
     }

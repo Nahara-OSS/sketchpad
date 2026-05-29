@@ -14,30 +14,38 @@ import androidx.room.Junction
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Relation
-import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.Update
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
+import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-@Singleton
-class AppDatabaseProvider @Inject constructor(
-    @param:ApplicationContext private val context: Context
-) {
-    val database = Room
-        .databaseBuilder(
-            context = context,
-            klass = AppDatabase::class.java,
-            name = "sketchpad-index"
-        )
+@Module
+@InstallIn(SingletonComponent::class)
+object AppDatabaseModule {
+    @Singleton
+    @Provides
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase = Room
+        .databaseBuilder(context = context, klass = AppDatabase::class.java, name = "sketchpad-index")
         .build()
+
+    @Singleton
+    @Provides
+    fun provideBadgeDao(database: AppDatabase): AppDatabase.BadgeDao = database.badgeDao()
+
+    @Singleton
+    @Provides
+    fun provideBrushDao(database: AppDatabase): AppDatabase.BrushDao = database.brushDao()
 }
 
 @Database(
     version = 1,
     entities = [
+        AppDatabase.Badge::class,
         AppDatabase.LibraryItem::class,
         AppDatabase.Brush::class,
         AppDatabase.Tag::class,
@@ -45,9 +53,19 @@ class AppDatabaseProvider @Inject constructor(
     ]
 )
 abstract class AppDatabase : RoomDatabase() {
+    abstract fun badgeDao(): BadgeDao
     abstract fun libraryDao(): LibraryDao
     abstract fun tagDao(): TagDao
     abstract fun brushDao(): BrushDao
+
+    @Dao
+    interface BadgeDao {
+        @Query("SELECT * FROM badge")
+        suspend fun getAll(): List<Badge>
+
+        @Insert
+        suspend fun insert(badge: Badge)
+    }
 
     @Dao
     interface LibraryDao {
@@ -132,6 +150,13 @@ abstract class AppDatabase : RoomDatabase() {
         @Delete
         suspend fun untagBrush(tagger: BrushTag)
     }
+
+    @Entity(tableName = "badge")
+    data class Badge(
+        @PrimaryKey(autoGenerate = false)
+        @ColumnInfo(name = "badgeId")
+        val badgeId: String
+    )
 
     @Entity(
         tableName = "library",
