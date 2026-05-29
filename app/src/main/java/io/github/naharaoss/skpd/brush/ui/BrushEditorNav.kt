@@ -1,12 +1,19 @@
 package io.github.naharaoss.skpd.brush.ui
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavEntry
@@ -77,7 +84,12 @@ private class SinglePaneScene(
 ) : Scene<BrushEditorRoute> {
     override val entries: List<NavEntry<BrushEditorRoute>> = listOf(entry)
     override val content: @Composable (() -> Unit) = {
-        Box(Modifier.width(width)) {
+        Surface(
+            modifier = Modifier
+                .width(width)
+                .clip(RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp))
+                .consumeWindowInsets(TopAppBarDefaults.windowInsets.only(WindowInsetsSides.End))
+        ) {
             entry.Content()
         }
     }
@@ -91,12 +103,22 @@ private class DoublePaneScene(
 ) : Scene<BrushEditorRoute> {
     override val entries: List<NavEntry<BrushEditorRoute>> = listOf(first, second)
     override val content: @Composable (() -> Unit) = {
-        Row {
-            Box(Modifier.width(400.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Surface(
+                modifier = Modifier
+                    .width(400.dp)
+                    .clip(RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp))
+                    .consumeWindowInsets(TopAppBarDefaults.windowInsets.only(WindowInsetsSides.End))
+            ) {
                 first.Content()
             }
 
-            Box(Modifier.width(400.dp)) {
+            Surface(
+                modifier = Modifier
+                    .width(400.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .consumeWindowInsets(TopAppBarDefaults.windowInsets.only(WindowInsetsSides.Start + WindowInsetsSides.End))
+            ) {
                 second.Content()
             }
         }
