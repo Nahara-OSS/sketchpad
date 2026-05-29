@@ -3,15 +3,16 @@ package io.github.naharaoss.skpd.brush.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -29,6 +30,7 @@ import io.github.naharaoss.skpd.R
 import io.github.naharaoss.skpd.brush.impl.StampBrush
 import io.github.naharaoss.skpd.utils.GraphEditor
 import kotlin.math.abs
+import kotlin.math.pow
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -116,14 +118,28 @@ fun StampPresetEditor(
             }
         }
 
-        BrushParameterLayout(
+        BrushSliderParameter(
             icon = { Icon(painterResource(R.drawable.edit_24px), "Spacing") },
             label = { Text("Spacing") },
-            value = {
+            formatValue = {
                 when {
-                    preset.spacing > 0 -> Text("${if (preset.spacing < 10) "%.2f".format(preset.spacing) else preset.spacing.roundToInt()} pixels")
-                    preset.spacing < 0 -> Text("${(preset.spacing * -100).roundToInt()}%")
+                    preset.spacing > 0 -> Text("${if (it < 10) "%.2f".format(it) else it.roundToInt()} pixels")
+                    preset.spacing < 0 -> Text("${(it * 100).roundToInt()}%")
                 }
+            },
+            value = abs(preset.spacing),
+            range = when {
+                preset.spacing > 0 -> 0.1f..1000f
+                preset.spacing < 0 -> 0.01f..10f
+                else -> 0.01f..1000f
+            },
+            forwardMapping = when {
+                preset.spacing > 0 -> ({ (it / 1000f).pow(0.1f) })
+                else -> ({ it })
+            },
+            backwardMapping = when {
+                preset.spacing > 0 -> ({ it.pow(1f / 0.1f) * 1000f })
+                else -> ({ it })
             },
             action = {
                 Row(horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
@@ -153,46 +169,48 @@ fun StampPresetEditor(
                         content = { Text("Auto") }
                     )
                 }
-            }
-        ) {
-            Slider(
-                value = abs(preset.spacing),
-                valueRange = when {
-                    preset.spacing > 0 -> 0.01f..1000f
-                    preset.spacing < 0 -> 0.01f..10f
-                    else -> 0.01f..1000f
-                },
-                onValueChange = {
-                    onPresetChange(preset.copy(spacing = when {
-                        preset.spacing > 0 -> it
-                        preset.spacing < 0 -> -it
-                        else -> it
-                    }))
-                },
-                onValueChangeFinished = onPresetChangeFinished
-            )
-        }
+            },
+            onValueChange = {
+                onPresetChange(preset.copy(spacing = when {
+                    preset.spacing > 0 -> it
+                    preset.spacing < 0 -> -it
+                    else -> it
+                }))
+            },
+            onValueChangeFinished = onPresetChangeFinished
+        )
 
         StampBrush.allParameters.forEach { parameter ->
             val name = stringResource(parameter.nameRes)
+            val dynamic = parameter.getDynamic(preset)
 
-            DynamicSlider(
-                dynamic = parameter.getDynamic(preset),
+            BrushSliderParameter(
                 icon = { Icon(painterResource(parameter.iconRes), name) },
                 label = { Text(name) },
-                value = { Text(parameter.formatValue(it)) },
+                formatValue = { Text(parameter.formatValue(it)) },
+                value = dynamic.base,
                 range = parameter.min..parameter.max,
-                sliderMapping = Pair(
-                    { parameter.forwardMapToSlider(it) },
-                    { parameter.backwardMapToSlider(it) }
-                ),
+                forwardMapping = parameter::forwardMapToSlider,
+                backwardMapping = parameter::backwardMapToSlider,
                 sliderTrack = when (parameter.centered) {
                     true -> { sliderState -> SliderDefaults.CenteredTrack(colors = SliderDefaults.colors(), sliderState = sliderState) }
                     false -> { sliderState -> SliderDefaults.Track(colors = SliderDefaults.colors(), sliderState = sliderState) }
                 },
-                onSensorEdit = { onDynamicEditor(parameter.parameter) },
-                onDynamicChange = { onPresetChange(parameter.replaceDynamic(preset, it)) },
-                onDynamicChangeFinished = onPresetChangeFinished
+                action = {
+                    ToggleButton(
+                        checked = dynamic.modifiers.isNotEmpty(),
+                        onCheckedChange = { onDynamicEditor(parameter.parameter) }
+                    ) {
+                        Icon(painterResource(R.drawable.edit_24px), "Sensor")
+                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                        Text("Sensor")
+                    }
+                },
+                onValueChange = {
+                    val dynamic = dynamic.copy(base = it)
+                    onPresetChange(parameter.replaceDynamic(preset, dynamic))
+                },
+                onValueChangeFinished = onPresetChangeFinished
             )
         }
     }

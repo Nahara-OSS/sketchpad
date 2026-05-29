@@ -6,15 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -25,7 +21,6 @@ import androidx.compose.material3.SliderState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.ToggleButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -35,27 +30,25 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import io.github.naharaoss.skpd.R
-import io.github.naharaoss.skpd.brush.Dynamic
 import io.github.naharaoss.skpd.ui.component.FancyDialog
 import java.text.ParseException
 
 @Composable
-fun DynamicSlider(
+fun BrushSliderParameter(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     icon: @Composable () -> Unit,
     label: @Composable () -> Unit,
-    value: @Composable (Float) -> Unit,
-    dynamic: Dynamic,
-    onDynamicChange: (Dynamic) -> Unit,
-    onDynamicChangeFinished: () -> Unit,
-    onSensorEdit: () -> Unit,
+    formatValue: @Composable (Float) -> Unit,
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    onValueChangeFinished: () -> Unit,
+    action: @Composable () -> Unit = {},
     range: ClosedFloatingPointRange<Float>,
-    sliderMapping: Pair<(Float) -> Float, (Float) -> Float> = Pair({ it }, { it }),
+    forwardMapping: (Float) -> Float = { it },
+    backwardMapping: (Float) -> Float = { it },
     sliderColors: SliderColors = SliderDefaults.colors(),
     sliderTrack: @Composable (SliderState) -> Unit = { sliderState -> SliderDefaults.Track(colors = sliderColors, enabled = enabled, sliderState = sliderState) }
 ) {
@@ -65,23 +58,14 @@ fun DynamicSlider(
         modifier = modifier,
         icon = icon,
         label = label,
-        value = { value(dynamic.base) },
-        action = {
-            ToggleButton(
-                checked = dynamic.modifiers.isNotEmpty(),
-                onCheckedChange = { onSensorEdit() }
-            ) {
-                Icon(painterResource(R.drawable.edit_24px), "Sensor")
-                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                Text("Sensor")
-            }
-        },
+        value = { formatValue(value) },
+        action = action,
         content = {
             Slider(
-                value = sliderMapping.first(dynamic.base),
-                valueRange = sliderMapping.first(range.start)..sliderMapping.first(range.endInclusive),
-                onValueChange = { onDynamicChange(dynamic.copy(base = sliderMapping.second(it))) },
-                onValueChangeFinished = onDynamicChangeFinished,
+                value = forwardMapping(value),
+                valueRange = forwardMapping(range.start)..forwardMapping(range.endInclusive),
+                onValueChange = { onValueChange(backwardMapping(it)) },
+                onValueChangeFinished = onValueChangeFinished,
                 track = sliderTrack
             )
         },
@@ -90,7 +74,7 @@ fun DynamicSlider(
 
     if (manualInputDialog) {
         val formatter = remember { DecimalFormat("#,##0.####") }
-        var value by remember(dynamic) { mutableStateOf(formatter.format(dynamic.base)) }
+        var value by remember(value) { mutableStateOf(formatter.format(value)) }
         val convertedValue = try {
             val value = formatter.parse(value)!!.toFloat()
             when {
@@ -115,8 +99,8 @@ fun DynamicSlider(
                     enabled = convertedValue != null,
                     onClick = {
                         if (convertedValue == null) return@TextButton
-                        onDynamicChange(dynamic.copy(base = convertedValue))
-                        onDynamicChangeFinished()
+                        onValueChange(convertedValue)
+                        onValueChangeFinished()
                         manualInputDialog = false
                     },
                     content = { Text("Confirm") }
@@ -132,7 +116,7 @@ fun DynamicSlider(
                 supportingText = {
                     when (convertedValue) {
                         null -> Text("Invalid format")
-                        else -> value(convertedValue)
+                        else -> formatValue(convertedValue)
                     }
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberSigned)

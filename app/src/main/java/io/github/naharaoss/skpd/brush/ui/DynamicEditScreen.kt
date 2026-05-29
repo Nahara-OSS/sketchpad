@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,7 +25,6 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -132,29 +130,23 @@ fun DynamicEditScreen(
                         contentPadding = innerPadding
                     ) {
                         item {
-                            BrushParameterLayout(
-                                modifier = Modifier.padding(top = 8.dp),
+                            BrushSliderParameter(
                                 icon = { Icon(painterResource(parameter.iconRes), "Base value") },
                                 label = { Text("Base value") },
-                                value = { Text(parameter.formatValue(dynamic.base)) },
-                                action = {}
-                            ) {
-                                Slider(
-                                    value = parameter.forwardMapToSlider(dynamic.base),
-                                    valueRange = parameter.forwardMapToSlider(parameter.min)..parameter.forwardMapToSlider(parameter.max),
-                                    onValueChange = {
-                                        val dynamic = dynamic.copy(base = parameter.backwardMapToSlider(it))
-                                        decoupledPreset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
-                                    },
-                                    onValueChangeFinished = {
-                                        scope.launch { brush?.store(decoupledPreset) }
-                                    },
-                                    track = when (parameter.centered) {
-                                        true -> { sliderState -> SliderDefaults.CenteredTrack(colors = SliderDefaults.colors(), sliderState = sliderState) }
-                                        false -> { sliderState -> SliderDefaults.Track(colors = SliderDefaults.colors(), sliderState = sliderState) }
-                                    }
-                                )
-                            }
+                                formatValue = { Text(parameter.formatValue(it)) },
+                                value = dynamic.base,
+                                range = parameter.min..parameter.max,
+                                forwardMapping = parameter::forwardMapToSlider,
+                                backwardMapping = parameter::backwardMapToSlider,
+                                sliderTrack = when (parameter.centered) {
+                                    true -> { sliderState -> SliderDefaults.CenteredTrack(colors = SliderDefaults.colors(), sliderState = sliderState) }
+                                    false -> { sliderState -> SliderDefaults.Track(colors = SliderDefaults.colors(), sliderState = sliderState) }
+                                },
+                                onValueChange = { decoupledPreset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic.copy(base = it)) },
+                                onValueChangeFinished = {
+                                    scope.launch { brush?.store(decoupledPreset) }
+                                }
+                            )
                         }
 
                         items(count = dynamic.modifiers.size, key = { dynamic.modifiers[it].id }) { i ->
@@ -228,6 +220,59 @@ fun DynamicEditScreen(
                                         }
                                     )
 
+                                    AnimatedContent(
+                                        targetState = modifier.sensor,
+                                        contentKey = { it.javaClass }
+                                    ) { sensor ->
+                                        when (sensor) {
+                                            is Sensor.Velocity -> {
+                                                var max by remember(sensor.max) { mutableFloatStateOf(sensor.max) }
+
+                                                BrushSliderParameter(
+                                                    modifier = Modifier.padding(top = 8.dp),
+                                                    icon = { Icon(painterResource(R.drawable.speed_24px), "Maximum speed") },
+                                                    label = { Text("Maximum speed") },
+                                                    formatValue = { Text("${if (it < 10) "%.2f".format(it) else it.roundToInt()} pixels per second") },
+                                                    value = max,
+                                                    range = 1f..10000f,
+                                                    onValueChange = { max = it },
+                                                    onValueChangeFinished = {
+                                                        val modifier = modifier.copy(sensor = sensor.copy(max = max))
+                                                        val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
+                                                        val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
+                                                        decoupledPreset = preset
+                                                        sensorDropdown = false
+                                                        scope.launch { brush?.store(preset) }
+                                                    }
+                                                )
+                                            }
+
+                                            is Sensor.Time -> {
+                                                var max by remember(sensor.max) { mutableFloatStateOf(sensor.max) }
+
+                                                BrushSliderParameter(
+                                                    modifier = Modifier.padding(top = 8.dp),
+                                                    icon = { Icon(painterResource(R.drawable.timer_24px), "Maximum duration") },
+                                                    label = { Text("Maximum duration") },
+                                                    formatValue = { Text("${if (it < 10) "%.2f".format(it) else it.roundToInt()} seconds") },
+                                                    value = max,
+                                                    range = 1f..60f,
+                                                    onValueChange = { max = it },
+                                                    onValueChangeFinished = {
+                                                        val modifier = modifier.copy(sensor = sensor.copy(max = max))
+                                                        val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
+                                                        val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
+                                                        decoupledPreset = preset
+                                                        sensorDropdown = false
+                                                        scope.launch { brush?.store(preset) }
+                                                    }
+                                                )
+                                            }
+
+                                            else -> Box(Modifier.fillMaxWidth())
+                                        }
+                                    }
+
                                     ListItem(
                                         onClick = { operationDropdown = true },
                                         content = { Text("Modifier operation") },
@@ -284,56 +329,51 @@ fun DynamicEditScreen(
                                                 var value by remember { mutableFloatStateOf(operation.value) }
                                                 val mappedMax = parameter.forwardMapToSlider(parameter.max)
 
-                                                BrushParameterLayout(
+                                                BrushSliderParameter(
                                                     modifier = Modifier.padding(top = 8.dp),
                                                     icon = { Icon(painterResource(R.drawable.question_mark_24px), "Value") },
                                                     label = { Text("Modifier addition") },
-                                                    value = { Text((if (value >= 0) "+" else "") + parameter.formatValue(value)) },
-                                                    action = {}
-                                                ) {
-                                                    Slider(
-                                                        value = if (value >= 0f) parameter.forwardMapToSlider(value) else -parameter.forwardMapToSlider(-value),
-                                                        valueRange = -mappedMax..mappedMax,
-                                                        onValueChange = {
-                                                            val input = if (it >= 0f) parameter.backwardMapToSlider(it) else -parameter.backwardMapToSlider(-it)
-                                                            value = input
-                                                        },
-                                                        onValueChangeFinished = {
-                                                            val modifier = modifier.copy(operation = operation.copy(value = value))
-                                                            val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
-                                                            val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
-                                                            decoupledPreset = preset
-                                                            scope.launch { brush?.store(preset) }
-                                                        },
-                                                        track = { SliderDefaults.CenteredTrack(sliderState = it) }
-                                                    )
-                                                }
+                                                    formatValue = {
+                                                        val input = if (it >= 0f) parameter.backwardMapToSlider(it) else -parameter.backwardMapToSlider(-it)
+                                                        Text((if (it >= 0) "+" else "") + parameter.formatValue(input))
+                                                    },
+                                                    value = if (value >= 0f) parameter.forwardMapToSlider(value) else -parameter.forwardMapToSlider(-value),
+                                                    range = -mappedMax..mappedMax,
+                                                    sliderTrack = { SliderDefaults.CenteredTrack(sliderState = it) },
+                                                    onValueChange = {
+                                                        val input = if (it >= 0f) parameter.backwardMapToSlider(it) else -parameter.backwardMapToSlider(-it)
+                                                        value = input
+                                                    },
+                                                    onValueChangeFinished = {
+                                                        val modifier = modifier.copy(operation = operation.copy(value = value))
+                                                        val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
+                                                        val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
+                                                        decoupledPreset = preset
+                                                        scope.launch { brush?.store(preset) }
+                                                    }
+                                                )
                                             }
 
                                             is Dynamic.Operation.Multiplicative -> {
                                                 var gain by remember { mutableFloatStateOf(operation.gain) }
 
-                                                BrushParameterLayout(
+                                                BrushSliderParameter(
                                                     modifier = Modifier.padding(top = 8.dp),
                                                     icon = { Icon(painterResource(R.drawable.question_mark_24px), "Gain") },
                                                     label = { Text("Modifier gain") },
-                                                    value = { Text((if (gain >= 0) "+" else "") + (gain * 100).roundToInt() + "%") },
-                                                    action = {}
-                                                ) {
-                                                    Slider(
-                                                        value = gain,
-                                                        valueRange = -1f..1f,
-                                                        onValueChange = { gain = it },
-                                                        onValueChangeFinished = {
-                                                            val modifier = modifier.copy(operation = operation.copy(gain = gain))
-                                                            val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
-                                                            val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
-                                                            decoupledPreset = preset
-                                                            scope.launch { brush?.store(preset) }
-                                                        },
-                                                        track = { SliderDefaults.CenteredTrack(sliderState = it) }
-                                                    )
-                                                }
+                                                    formatValue = { Text((if (it >= 0) "+" else "") + (it * 100).roundToInt() + "%") },
+                                                    value = gain,
+                                                    range = -1f..1f,
+                                                    sliderTrack = { SliderDefaults.CenteredTrack(sliderState = it) },
+                                                    onValueChange = { gain = it },
+                                                    onValueChangeFinished = {
+                                                        val modifier = modifier.copy(operation = operation.copy(gain = gain))
+                                                        val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
+                                                        val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
+                                                        decoupledPreset = preset
+                                                        scope.launch { brush?.store(preset) }
+                                                    }
+                                                )
                                             }
                                         }
                                     }
