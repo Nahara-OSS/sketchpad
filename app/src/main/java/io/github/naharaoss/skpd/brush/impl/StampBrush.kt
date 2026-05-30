@@ -488,7 +488,7 @@ object StampBrush : BrushType<StampBrush.Preset> {
                 
                 void main() {
                     float dist = $distance;
-                    float value = texture(uFalloffGraph, vec2(dist, 0.0)).r;
+                    float value = texture(uFalloffGraph, vec2(dist, 0.0)).r * step(dist, 1.0);
                     color = uColor * value * fFlow;
                     gl_FragDepth = value * fOpacity;
                 }
@@ -574,7 +574,7 @@ object StampBrush : BrushType<StampBrush.Preset> {
         override val type: BrushType<Preset> get() = this@StampBrush
 
         val squareBrushProgram = SimpleBrushTipProgram("max(abs(fUV.x * 2.0 - 1.0), abs(fUV.y * 2.0 - 1.0))")
-        val circleBrushProgram = SimpleBrushTipProgram("clamp(distance(fUV, vec2(0.5, 0.5)) * 2.0, 0.0, 1.0)")
+        val circleBrushProgram = SimpleBrushTipProgram("distance(fUV, vec2(0.5, 0.5)) * 2.0")
 
         val mergeProgram = GLProgram(
             GLShader(GLShader.Type.Vertex, """
