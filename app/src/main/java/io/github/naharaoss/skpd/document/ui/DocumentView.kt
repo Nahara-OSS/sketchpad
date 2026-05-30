@@ -224,9 +224,7 @@ class DocumentView(context: Context) : GLSurfaceView(context) {
             )
 
             for (address in affectedTiles) {
-                val tileRect = address.calculateTileRect(documentRenderer.document.tileSize)
-                brushRenderer.consumeTile(address, tileRect)
-                layerRenderer.consumeBrush(address, brushRenderer)
+                layerRenderer.useBrush(address, brushRenderer)
             }
         }
 

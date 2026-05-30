@@ -13,14 +13,21 @@ import io.github.naharaoss.skpd.utils.toBlendState
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class LayerRenderer(
-    val tileSize: Int,
-    val layer: DocumentAccess.Layer
-) : AutoCloseable {
+/**
+ * Renderer for layer in document.
+ *
+ * Layers are created and destroyed by [DocumentRenderer] when [DocumentRenderer.update] is called.
+ *
+ * - To use brush (drawing) on layer, use [useBrush] with a loaded brush renderer.
+ * - To commit the brush stroke to document's layer, call [commitBrush] on [DocumentAccess.Writer].
+ * - To cancel the brush stroke (eg: user activated gesture instead of drawing), call [cancelBrush].
+ */
+class LayerRenderer internal constructor(val parent: DocumentRenderer, val layer: DocumentAccess.Layer) {
+    private val tileSize = parent.document.tileSize
     private val tiles = mutableMapOf<TileAddress, TileTexture>()
     private val pendingTiles = mutableMapOf<TileAddress, TileTexture>()
 
-    fun update(loadTiles: Set<TileAddress>, unloadTiles: Set<TileAddress>) {
+    internal fun update(loadTiles: Set<TileAddress>, unloadTiles: Set<TileAddress>) {
         val buffer = ByteBuffer.allocateDirect(tileSize * tileSize * 4).order(ByteOrder.nativeOrder())
 
         loadTiles.forEach { address ->
@@ -32,16 +39,28 @@ class LayerRenderer(
         }
 
         unloadTiles.forEach { address ->
-            val tile = tiles[address] ?: return@forEach
-            tile.close()
-            tiles.remove(address)
+            tiles.remove(address)?.close()
+            pendingTiles.remove(address)?.close()
         }
     }
 
-    fun consumeBrush(address: TileAddress, brushRenderer: BrushType.Renderer<*>) {
+    /**
+     * Use brush on this layer.
+     *
+     * [BrushType.Renderer.consumeInput] must be called before using the brush with this layer,
+     * while [BrushType.Renderer.consumeTile] must not be called as it will be called by this method
+     * instead.
+     *
+     * To write the brush stroke to document, use [commitBrush].
+     *
+     * @param [address] Address of the tile being touched by brush
+     * @param [brushRenderer] The brush renderer
+     */
+    fun useBrush(address: TileAddress, brushRenderer: BrushType.Renderer<*>) {
         val tile = tiles[address]
         val pendingTile = pendingTiles[address] ?: TileTexture(tileSize, null)
         pendingTiles[address] = pendingTile
+        brushRenderer.consumeTile(address, address.calculateTileRect(tileSize))
 
         if (tile != null) {
             tile.framebuffer.bind {
@@ -74,6 +93,9 @@ class LayerRenderer(
         GLES30.glDisable(GLES30.GL_BLEND)
     }
 
+    /**
+     * Commit the brush stroke on this layer to document.
+     */
     fun DocumentAccess.Writer.commitBrush() {
         val buffer = ByteBuffer.allocateDirect(tileSize * tileSize * 4)
 
@@ -96,20 +118,23 @@ class LayerRenderer(
         pendingTiles.clear()
     }
 
+    /**
+     * Cancel pending brush stroke on this layer.
+     */
     fun cancelBrush() {
         pendingTiles.forEach { (_, tile) -> tile.close() }
         pendingTiles.clear()
     }
 
-    fun render(
+    internal fun render(
         tileProgram: TileProgram,
         viewport: Rect,
         canvasTransform: Matrix,
         framebuffer: GLFramebuffer
     ) {
-        val allTiles = tiles.keys + pendingTiles.keys
+        if (layer.opacity == 0f) return
 
-        for (address in allTiles) {
+        for (address in tiles.keys + pendingTiles.keys) {
             val tile = tiles[address]
             val pendingTile = pendingTiles[address]
             val displayTile = pendingTile ?: tile
@@ -133,7 +158,7 @@ class LayerRenderer(
         }
     }
 
-    override fun close() {
+    internal fun close() {
         tiles.forEach { (_, tile) -> tile.close() }
         tiles.clear()
         pendingTiles.forEach { (_, tile) -> tile.close() }
