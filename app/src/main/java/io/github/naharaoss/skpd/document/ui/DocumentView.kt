@@ -168,6 +168,7 @@ class DocumentView(context: Context) : GLSurfaceView(context) {
         fun setCanvasTransform(value: Matrix) {
             if (!initialized) return
             canvasTransform.setFrom(value)
+            if (width != -1 && height != -1) documentRenderer?.update(viewport, canvasTransform)
         }
 
         fun setBrushPreset(preset: BrushType.Preset?) {

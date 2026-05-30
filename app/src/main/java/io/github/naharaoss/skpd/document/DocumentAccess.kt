@@ -64,6 +64,6 @@ interface DocumentAccess {
     }
 
     interface Writer : AutoCloseable {
-        fun Layer.storeTile(tile: TileAddress, src: ByteBuffer)
+        fun Layer.storeTile(address: TileAddress, src: ByteBuffer)
     }
 }

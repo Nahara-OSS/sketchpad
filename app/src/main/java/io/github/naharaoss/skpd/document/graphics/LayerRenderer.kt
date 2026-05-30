@@ -6,18 +6,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Matrix
 import io.github.naharaoss.skpd.brush.BrushType
 import io.github.naharaoss.skpd.document.DocumentAccess
-import io.github.naharaoss.skpd.utils.Allocator
 import io.github.naharaoss.skpd.utils.BlendMode
 import io.github.naharaoss.skpd.utils.GLFramebuffer
 import io.github.naharaoss.skpd.utils.TileAddress
 import io.github.naharaoss.skpd.utils.toBlendState
-import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 class LayerRenderer(
     val tileSize: Int,
-    val tileAllocator: Allocator<TileTexture, Buffer?>,
     val layer: DocumentAccess.Layer
 ) : AutoCloseable {
     private val tiles = mutableMapOf<TileAddress, TileTexture>()
@@ -31,19 +28,19 @@ class LayerRenderer(
             buffer.clear()
             layer.loadTile(address, buffer)
             buffer.flip()
-            tiles[address] = tiles[address] ?: tileAllocator.allocate(buffer)
+            tiles[address] = tiles[address] ?: TileTexture(tileSize, buffer)
         }
 
         unloadTiles.forEach { address ->
             val tile = tiles[address] ?: return@forEach
-            tileAllocator.recall(tile)
+            tile.close()
             tiles.remove(address)
         }
     }
 
     fun consumeBrush(address: TileAddress, brushRenderer: BrushType.Renderer<*>) {
         val tile = tiles[address]
-        val pendingTile = pendingTiles[address] ?: tileAllocator.allocate(null)
+        val pendingTile = pendingTiles[address] ?: TileTexture(tileSize, null)
         pendingTiles[address] = pendingTile
 
         if (tile != null) {
@@ -81,7 +78,7 @@ class LayerRenderer(
         val buffer = ByteBuffer.allocateDirect(tileSize * tileSize * 4)
 
         for ((address, tile) in pendingTiles) {
-            tiles[address]?.let { tileAllocator.recall(it) }
+            tiles[address]?.close()
             tiles[address] = tile
             tile.framebuffer.bind {
                 GLES30.glReadPixels(
@@ -100,7 +97,7 @@ class LayerRenderer(
     }
 
     fun cancelBrush() {
-        pendingTiles.forEach { (_, tile) -> tileAllocator.recall(tile) }
+        pendingTiles.forEach { (_, tile) -> tile.close() }
         pendingTiles.clear()
     }
 
@@ -137,9 +134,9 @@ class LayerRenderer(
     }
 
     override fun close() {
-        tiles.forEach { (_, tile) -> tileAllocator.recall(tile) }
+        tiles.forEach { (_, tile) -> tile.close() }
         tiles.clear()
-        pendingTiles.forEach { (_, tile) -> tileAllocator.recall(tile) }
+        pendingTiles.forEach { (_, tile) -> tile.close() }
         pendingTiles.clear()
     }
 }

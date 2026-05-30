@@ -53,12 +53,12 @@ class MemoryDocument(
     private class Writer(
         private val document: MemoryDocument
     ) : DocumentAccess.Writer {
-        override fun DocumentAccess.Layer.storeTile(tile: TileAddress, src: ByteBuffer) {
+        override fun DocumentAccess.Layer.storeTile(address: TileAddress, src: ByteBuffer) {
             if (this !is Layer) throw Exception("Called on incorrect layer implementation")
             if (src.remaining() < document.bytesPerTile) throw Exception("Buffer does not have enough remaining bytes to read data")
             val array = ByteArray(document.bytesPerTile)
             src.get(array)
-            lock.withLock { tiles[tile] = array }
+            lock.withLock { tiles[address] = array }
         }
 
         override fun close() {}
