@@ -1,6 +1,7 @@
 package io.github.naharaoss.skpd.document.graphics
 
 import android.opengl.GLES30
+import android.util.Log
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Matrix
@@ -24,8 +25,9 @@ import java.nio.ByteOrder
  */
 class LayerRenderer internal constructor(val parent: DocumentRenderer, val layer: DocumentAccess.Layer) {
     private val tileSize = parent.document.tileSize
-    private val tiles = mutableMapOf<TileAddress, TileTexture>()
-    private val pendingTiles = mutableMapOf<TileAddress, TileTexture>()
+    private val tiles = mutableMapOf<TileAddress, TileTexture>() // Loaded tiles for displaying
+    private val temporaryTiles = mutableMapOf<TileAddress, TileTexture>() // Temporary loaded tiles for brush
+    private val pendingTiles = mutableMapOf<TileAddress, TileTexture>() // Pending tiles with brush stroke, ready to be committed or canceled
 
     internal fun update(loadTiles: Set<TileAddress>, unloadTiles: Set<TileAddress>) {
         val buffer = ByteBuffer.allocateDirect(tileSize * tileSize * 4).order(ByteOrder.nativeOrder())
@@ -44,6 +46,22 @@ class LayerRenderer internal constructor(val parent: DocumentRenderer, val layer
         }
     }
 
+    private fun getOrTemporarilyLoadTile(address: TileAddress): TileTexture? {
+        val tile = temporaryTiles[address] ?: tiles[address]
+
+        if (tile == null && layer.isTileExists(address)) {
+            Log.d("LayerRenderer", "Temporarily loading $address")
+            val buffer = ByteBuffer.allocateDirect(tileSize * tileSize * 4).order(ByteOrder.nativeOrder())
+            layer.loadTile(address, buffer)
+            buffer.flip()
+            val tile = TileTexture(tileSize, buffer)
+            temporaryTiles[address] = tile
+            return tile
+        } else {
+            return tile
+        }
+    }
+
     /**
      * Use brush on this layer.
      *
@@ -57,8 +75,8 @@ class LayerRenderer internal constructor(val parent: DocumentRenderer, val layer
      * @param [brushRenderer] The brush renderer
      */
     fun useBrush(address: TileAddress, brushRenderer: BrushType.Renderer<*>) {
-        val tile = tiles[address]
-        val pendingTile = pendingTiles[address] ?: TileTexture(tileSize, null)
+        val tile = getOrTemporarilyLoadTile(address)
+        val pendingTile = pendingTiles.getOrPut(address, { TileTexture(tileSize, null) })
         pendingTiles[address] = pendingTile
         brushRenderer.consumeTile(address, address.calculateTileRect(tileSize))
 
@@ -100,8 +118,6 @@ class LayerRenderer internal constructor(val parent: DocumentRenderer, val layer
         val buffer = ByteBuffer.allocateDirect(tileSize * tileSize * 4)
 
         for ((address, tile) in pendingTiles) {
-            tiles[address]?.close()
-            tiles[address] = tile
             tile.framebuffer.bind {
                 GLES30.glReadPixels(
                     0, 0,
@@ -113,6 +129,12 @@ class LayerRenderer internal constructor(val parent: DocumentRenderer, val layer
             }
             layer.storeTile(address, buffer)
             buffer.clear()
+
+            tiles[address]?.close()
+            tiles[address] = tile
+            temporaryTiles[address]?.let { Log.d("LayerRenderer", "Unloading temporarily loaded $address") }
+            temporaryTiles[address]?.close()
+            temporaryTiles.remove(address)
         }
 
         pendingTiles.clear()
@@ -122,6 +144,8 @@ class LayerRenderer internal constructor(val parent: DocumentRenderer, val layer
      * Cancel pending brush stroke on this layer.
      */
     fun cancelBrush() {
+        temporaryTiles.forEach { (_, tile) -> tile.close() }
+        temporaryTiles.clear()
         pendingTiles.forEach { (_, tile) -> tile.close() }
         pendingTiles.clear()
     }
@@ -135,9 +159,7 @@ class LayerRenderer internal constructor(val parent: DocumentRenderer, val layer
         if (layer.opacity == 0f) return
 
         for (address in tiles.keys + pendingTiles.keys) {
-            val tile = tiles[address]
-            val pendingTile = pendingTiles[address]
-            val displayTile = pendingTile ?: tile
+            val displayTile = pendingTiles[address] ?: temporaryTiles[address] ?: tiles[address]
 
             if (displayTile != null) {
                 framebuffer.bind {
@@ -161,6 +183,8 @@ class LayerRenderer internal constructor(val parent: DocumentRenderer, val layer
     internal fun close() {
         tiles.forEach { (_, tile) -> tile.close() }
         tiles.clear()
+        temporaryTiles.forEach { (_, tile) -> tile.close() }
+        temporaryTiles.clear()
         pendingTiles.forEach { (_, tile) -> tile.close() }
         pendingTiles.clear()
     }

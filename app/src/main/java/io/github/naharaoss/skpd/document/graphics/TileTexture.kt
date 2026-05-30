@@ -36,6 +36,7 @@ class TileTexture(private val tileSize: Int, buffer: Buffer?) : AutoCloseable {
             ensureCompleted()
 
             if (buffer == null) {
+                setViewport(0, 0, tileSize, tileSize)
                 setClearColor(Color.Transparent)
                 clear(GLFramebuffer.ClearType.Color)
             }
