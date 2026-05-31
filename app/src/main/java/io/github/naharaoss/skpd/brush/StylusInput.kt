@@ -98,9 +98,7 @@ data class StylusInput(
             val dy = if (prev != null) y - prev.y else 0f
             val time = (next.eventTime - next.downTime) / 1000f
             val delta = if (prev != null) time - prev.time else 0f
-            val vx = if (prev != null) dx / delta else 0f
-            val vy = if (prev != null) dy / delta else 0f
-            val velocity = sqrt(vx * vx + vy * vy)
+            val velocity = sqrt(dx * dx + dy * dy) / delta
             val pressure = next.getAxisValue(MotionEvent.AXIS_PRESSURE, i)
             val altitude = next.getAxisValue(MotionEvent.AXIS_TILT, i)
             val azimuth = next.getAxisValue(MotionEvent.AXIS_ORIENTATION, i)
