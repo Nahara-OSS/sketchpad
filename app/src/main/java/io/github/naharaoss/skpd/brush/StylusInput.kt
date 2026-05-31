@@ -2,6 +2,7 @@ package io.github.naharaoss.skpd.brush
 
 import android.view.MotionEvent
 import androidx.compose.ui.util.lerp
+import kotlin.math.PI
 import kotlin.math.sqrt
 
 /**
@@ -61,8 +62,8 @@ data class StylusInput(
     /**
      * Stylus azimuth tilt angle.
      *
-     * The value is 0 for tilting to the right (+X direction), 90 for +Y, 180 for -X and 270 for -Y.
-     * This value corresponds to [android.view.MotionEvent.AXIS_ORIENTATION].
+     * The value is 0 for tilting to +Y, +90 for tilting to -X, +180/-180 for tilting to +Y and -90
+     * for tilting to +X. This value corresponds to [android.view.MotionEvent.AXIS_ORIENTATION].
      */
     val azimuth: Float,
 
@@ -90,6 +91,8 @@ data class StylusInput(
     }
 
     companion object {
+        private val PI_F = PI.toFloat()
+
         fun fromMotionEvent(prev: StylusInput?, next: MotionEvent, pointerId: Int, strokeJitter: Float): StylusInput {
             val i = next.findPointerIndex(pointerId)
             val x = next.getX(i)
@@ -100,8 +103,8 @@ data class StylusInput(
             val delta = if (prev != null) time - prev.time else 0f
             val velocity = sqrt(dx * dx + dy * dy) / delta
             val pressure = next.getAxisValue(MotionEvent.AXIS_PRESSURE, i)
-            val altitude = next.getAxisValue(MotionEvent.AXIS_TILT, i)
-            val azimuth = next.getAxisValue(MotionEvent.AXIS_ORIENTATION, i)
+            val altitude = 90f - next.getAxisValue(MotionEvent.AXIS_TILT, i) * 180f / PI_F
+            val azimuth = next.getAxisValue(MotionEvent.AXIS_ORIENTATION, i) * 180f / PI_F
             val rotation = 0f
             return StylusInput(time, x, y, velocity, pressure, altitude, azimuth, rotation, strokeJitter)
         }
