@@ -13,7 +13,7 @@ import io.github.naharaoss.skpd.utils.TileAddress
 class TileProgram : AutoCloseable {
     private val vertexShader = GLShader(GLShader.Type.Vertex, """
         #version 300 es
-        precision mediump float;
+        precision highp float;
         
         const vec2 QUAD_UVS[4] = vec2[4](
             vec2(0.0, 0.0),

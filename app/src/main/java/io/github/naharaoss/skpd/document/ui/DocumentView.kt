@@ -3,6 +3,7 @@ package io.github.naharaoss.skpd.document.ui
 import android.annotation.SuppressLint
 import android.content.Context
 import android.opengl.GLSurfaceView
+import android.util.Log
 import android.view.MotionEvent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -214,6 +215,7 @@ class DocumentView(context: Context) : GLSurfaceView(context) {
             clipToCanvas.invert()
 
             val canvasPosition = clipToCanvas.map(clipPosition)
+            Log.d("DocumentView", "${canvasPosition}")
             val input = input.copy(x = canvasPosition.x, y = canvasPosition.y)
             val affectedRect = brushRenderer.consumeInput(input)
             val affectedTiles = calculateVisibleTiles(

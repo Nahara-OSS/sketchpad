@@ -441,7 +441,7 @@ object StampBrush : BrushType<StampBrush.Preset> {
         constructor(distance: String) : this(GLProgram(
             GLShader(GLShader.Type.Vertex, """
                 #version 300 es
-                precision mediump float;
+                precision highp float;
                 
                 const vec2 QUAD_POSITIONS[4] = vec2[4](
                     vec2(-0.5,  0.5),
@@ -579,7 +579,7 @@ object StampBrush : BrushType<StampBrush.Preset> {
         val mergeProgram = GLProgram(
             GLShader(GLShader.Type.Vertex, """
                 #version 300 es
-                precision mediump float;
+                precision highp float;
                 
                 const vec4 QUAD_POSITIONS[4] = vec4[4](
                     vec4(-1.0,  1.0, 0.0, 1.0),
