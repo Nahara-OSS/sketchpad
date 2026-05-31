@@ -89,7 +89,7 @@ sealed interface Sensor {
         override fun forInput(input: StylusInput): Float {
             val azimuth = input.azimuth * PI.toFloat() / 180f
             val altitude = input.altitude * PI.toFloat() / 180f
-            return -sin(azimuth) * cos(altitude)
+            return (1f - sin(azimuth) * cos(altitude)) / 2f
         }
     }
 
@@ -105,7 +105,7 @@ sealed interface Sensor {
         override fun forInput(input: StylusInput): Float {
             val azimuth = input.azimuth * PI.toFloat() / 180f
             val altitude = input.altitude * PI.toFloat() / 180f
-            return cos(azimuth) * cos(altitude)
+            return (1f + cos(azimuth) * cos(altitude)) / 2f
         }
     }
 
