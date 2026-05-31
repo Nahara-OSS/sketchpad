@@ -57,7 +57,7 @@ class InputTestActivity : ComponentActivity() {
             val stroke = remember { mutableStateListOf<StylusInput>() }
             var lastAction by remember { mutableStateOf<InputProcessor.Action?>(null) }
             var canvasTransform by remember { mutableStateOf(Matrix()) }
-            val boxColor = MaterialTheme.colorScheme.primaryContainer
+            val boxColor = MaterialTheme.colorScheme.tertiary
             val strokeColor = MaterialTheme.colorScheme.primary
             val eventColor = MaterialTheme.colorScheme.secondary
 
@@ -85,7 +85,8 @@ class InputTestActivity : ComponentActivity() {
                             drawRect(
                                 topLeft = Offset(size.width / -2f, size.height / -2f),
                                 size = size,
-                                color = boxColor
+                                color = boxColor,
+                                style = Stroke(width = 1.dp.toPx())
                             )
                         }
 
