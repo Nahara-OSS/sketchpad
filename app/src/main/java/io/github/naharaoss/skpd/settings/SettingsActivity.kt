@@ -35,6 +35,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -70,6 +71,24 @@ class SettingsActivity : ComponentActivity() {
             val sourceUrl = stringResource(R.string.app_source_url).toUri()
             val fadeMotion = tween<Float>(durationMillis = 300, easing = LinearEasing)
             val slideMotion = tween<IntOffset>(300, easing = FastOutSlowInEasing)
+
+            @Composable
+            fun LocalSettingsPage(key: SettingsRoute) {
+                SettingsPage(
+                    modifier = Modifier.fillMaxSize(),
+                    route = key,
+                    viewModel = viewModel,
+                    onNavigate = { navigateTo(it, false) },
+                    onOpenInputTester = {
+                        val intent = Intent(this, InputTestActivity::class.java)
+                        startActivity(intent)
+                    },
+                    onOpenSourceCode = {
+                        val intent = Intent(Intent.ACTION_VIEW, sourceUrl)
+                        startActivity(intent)
+                    }
+                )
+            }
 
             SketchpadTheme {
                 when (windowSizeClass.widthSizeClass) {
@@ -116,16 +135,7 @@ class SettingsActivity : ComponentActivity() {
                                 },
                                 entryProvider = { key ->
                                     NavEntry(key) {
-                                        SettingsPage(
-                                            modifier = Modifier.fillMaxSize(),
-                                            route = key,
-                                            viewModel = viewModel,
-                                            onNavigate = { navigateTo(it, false) },
-                                            onOpenSourceCode = {
-                                                val intent = Intent(Intent.ACTION_VIEW, sourceUrl)
-                                                startActivity(intent)
-                                            }
-                                        )
+                                        LocalSettingsPage(key)
                                     }
                                 }
                             )
@@ -145,13 +155,21 @@ class SettingsActivity : ComponentActivity() {
                                 modifier = (if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Medium) Modifier.weight(1f) else Modifier.width(400.dp))
                                     .fillMaxHeight()
                                     .clip(RoundedCornerShape(0.dp, 16.dp, 16.dp, 0.dp))
-                                    .consumeWindowInsets(ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.End)),
+                                    .consumeWindowInsets(
+                                        ScaffoldDefaults.contentWindowInsets.only(
+                                            WindowInsetsSides.End
+                                        )
+                                    ),
                                 containerColor = MaterialTheme.colorScheme.background,
                                 topBar = { SettingsTopAppBar(scrollBehavior = scrollBehavior, currentRoute = SettingsRoute.Main, onBack = goBack) }
                             ) { innerPadding ->
-                                Box(Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)) {
+                                Box(Modifier
+                                    .fillMaxSize()
+                                    .nestedScroll(scrollBehavior.nestedScrollConnection)) {
                                     MainSettingsPage(
-                                        modifier = Modifier.padding(innerPadding).fillMaxSize(),
+                                        modifier = Modifier
+                                            .padding(innerPadding)
+                                            .fillMaxSize(),
                                         currentRoute = backStack[0],
                                         onNavigate = { navigateTo(it, true) }
                                     )
@@ -194,7 +212,11 @@ class SettingsActivity : ComponentActivity() {
                                             Scaffold(
                                                 modifier = Modifier
                                                     .fillMaxSize()
-                                                    .consumeWindowInsets(ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Start)),
+                                                    .consumeWindowInsets(
+                                                        ScaffoldDefaults.contentWindowInsets.only(
+                                                            WindowInsetsSides.Start
+                                                        )
+                                                    ),
                                                 topBar = { SettingsTopAppBar(scrollBehavior = scrollBehavior, currentRoute = key) }
                                             ) { innerPadding ->
                                                 Box(
@@ -203,16 +225,7 @@ class SettingsActivity : ComponentActivity() {
                                                         .nestedScroll(scrollBehavior.nestedScrollConnection)
                                                         .padding(innerPadding)
                                                 ) {
-                                                    SettingsPage(
-                                                        modifier = Modifier.fillMaxSize(),
-                                                        route = key,
-                                                        viewModel = viewModel,
-                                                        onNavigate = { navigateTo(it, false) },
-                                                        onOpenSourceCode = {
-                                                            val intent = Intent(Intent.ACTION_VIEW, sourceUrl)
-                                                            startActivity(intent)
-                                                        }
-                                                    )
+                                                    LocalSettingsPage(key)
                                                 }
                                             }
                                         }

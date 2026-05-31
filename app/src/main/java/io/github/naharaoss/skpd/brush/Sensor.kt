@@ -26,7 +26,7 @@ sealed interface Sensor {
             Rotation,
             TiltX,
             TiltY,
-            Velocity(100f),
+            Velocity(1000f),
             Time(1f),
             StrokeJitter,
             DabJitter
@@ -89,7 +89,7 @@ sealed interface Sensor {
         override fun forInput(input: StylusInput): Float {
             val azimuth = input.azimuth * PI.toFloat() / 180f
             val altitude = input.altitude * PI.toFloat() / 180f
-            return cos(azimuth) * cos(altitude)
+            return -sin(azimuth) * cos(altitude)
         }
     }
 
@@ -105,7 +105,7 @@ sealed interface Sensor {
         override fun forInput(input: StylusInput): Float {
             val azimuth = input.azimuth * PI.toFloat() / 180f
             val altitude = input.altitude * PI.toFloat() / 180f
-            return sin(azimuth) * cos(altitude)
+            return cos(azimuth) * cos(altitude)
         }
     }
 

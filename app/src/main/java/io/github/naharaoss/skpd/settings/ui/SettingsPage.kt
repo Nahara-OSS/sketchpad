@@ -13,6 +13,7 @@ fun SettingsPage(
     route: SettingsRoute,
     viewModel: SettingsViewModel,
     onNavigate: (SettingsRoute) -> Unit,
+    onOpenInputTester: () -> Unit,
     onOpenSourceCode: () -> Unit
 ) {
     val settings by viewModel.settings.collectAsState()
@@ -22,6 +23,11 @@ fun SettingsPage(
             modifier = modifier,
             currentRoute = route,
             onNavigate = onNavigate
+        )
+
+        is SettingsRoute.Input -> InputSettingsPage(
+            modifier = modifier,
+            onOpenInputTester = onOpenInputTester
         )
 
         is SettingsRoute.Performance -> PerformanceSettingsPage(
