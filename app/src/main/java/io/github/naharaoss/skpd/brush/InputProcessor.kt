@@ -35,17 +35,79 @@ abstract class InputProcessor(
             override fun updateState(event: MotionEvent, pointers: Map<Pointer, Pointer.State>): List<Action>? {
                 val stylus = ((stylus ?: pointers.keys.find { it is Pointer.Stylus } ?: return null) as Pointer.Stylus).also { stylus = it }
                 val state = pointers[stylus] ?: Pointer.State.Move
+                val input = StylusInput.fromMotionEvent(lastInput, event, stylus.id, lastInput?.strokeJitter ?: Random.nextFloat())
                 val kind = when (state) {
                     Pointer.State.Down -> {
                         requestUnbufferedDispatch(event)
+                        lastInput = input
                         Action.Stylus.Kind.Down
                     }
-                    Pointer.State.Move -> Action.Stylus.Kind.Move
-                    Pointer.State.Up -> Action.Stylus.Kind.Up
+                    Pointer.State.Move -> {
+                        lastInput = input
+                        Action.Stylus.Kind.Move
+                    }
+                    Pointer.State.Up -> {
+                        lastInput = null
+                        this.stylus = null
+                        Action.Stylus.Kind.Up
+                    }
                 }
-                val input = StylusInput.fromMotionEvent(lastInput, event, stylus.id, lastInput?.strokeJitter ?: Random.nextFloat())
-                lastInput = if (state == Pointer.State.Up) { this.stylus = null; null } else input
                 return listOf(Action.Stylus(input, kind, stylus.eraser))
+            }
+        },
+
+        object : Subprocessor {
+            private var triggeredDrawing = false
+            private var firstInput: StylusInput? = null
+            private var lastInput: StylusInput? = null
+
+            override fun updateState(event: MotionEvent, pointers: Map<Pointer, Pointer.State>): List<Action>? {
+                val fingerDown = fingerDrawing && pointers.keys.count { it is Pointer.Finger && pointers[it] != Pointer.State.Up } == 1
+                val firstInput = firstInput
+                val lastInput = lastInput
+
+                if (!fingerDown) {
+                    val lastInput = lastInput
+                    this.firstInput = null
+                    this.lastInput = null
+
+                    if (triggeredDrawing && lastInput != null) {
+                        triggeredDrawing = false
+                        return listOf(Action.Stylus(lastInput, Action.Stylus.Kind.Up, false))
+                    } else {
+                        return null
+                    }
+                }
+
+                val input = StylusInput.fromMotionEvent(lastInput, event, event.getPointerId(0), lastInput?.strokeJitter ?: Random.nextFloat())
+
+                when {
+                    firstInput == null -> {
+                        requestUnbufferedDispatch(event)
+                        this.firstInput = input
+                        this.lastInput = input
+                        return emptyList()
+                    }
+
+                    triggeredDrawing -> {
+                        this.lastInput = input
+                        return listOf(Action.Stylus(input, Action.Stylus.Kind.Move, false))
+                    }
+
+                    lastInput != null && (firstInput distanceTo lastInput) >= 10f -> {
+                        triggeredDrawing = true
+
+                        return listOf(
+                            Action.Stylus(firstInput, Action.Stylus.Kind.Down, false),
+                            Action.Stylus(input, Action.Stylus.Kind.Move, false)
+                        )
+                    }
+
+                    else -> {
+                        this.lastInput = input
+                        return emptyList()
+                    }
+                }
             }
         },
 
@@ -57,6 +119,13 @@ abstract class InputProcessor(
 
             override fun updateState(event: MotionEvent, pointers: Map<Pointer, Pointer.State>): List<Action>? {
                 val fingers = pointers.keys.filterIsInstance<Pointer.Finger>().filter { pointers[it] != Pointer.State.Up }
+
+                if (fingerDrawing && fingers.size == 1) {
+                    this.fingers = emptyMap()
+                    this.maxFingers = 0
+                    this.triggeredTransform = false
+                    return null
+                }
 
                 if (this.fingers.size != fingers.size) {
                     if (fingers.isEmpty()) {

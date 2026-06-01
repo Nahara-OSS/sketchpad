@@ -150,6 +150,10 @@ class ScratchpadView(context: Context) : GLSurfaceView(context) {
             queueEvent { renderer.usePreset(value) }
         }
 
+    var fingerDrawing
+        get() = inputProcessor.fingerDrawing
+        set(value) { inputProcessor.fingerDrawing = value }
+
     var enableScratchpad = true
 
     init {

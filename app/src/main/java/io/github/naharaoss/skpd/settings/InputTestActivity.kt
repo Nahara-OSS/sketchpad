@@ -8,6 +8,7 @@ import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalGridApi
@@ -23,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +41,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import dagger.hilt.android.AndroidEntryPoint
 import io.github.naharaoss.skpd.R
 import io.github.naharaoss.skpd.brush.InputProcessor
 import io.github.naharaoss.skpd.brush.Sensor
@@ -46,7 +49,10 @@ import io.github.naharaoss.skpd.brush.StylusInput
 import io.github.naharaoss.skpd.ui.component.TooltipIconButton
 import io.github.naharaoss.skpd.ui.theme.SketchpadTheme
 
+@AndroidEntryPoint
 class InputTestActivity : ComponentActivity() {
+    private val settingsViewModel: SettingsViewModel by viewModels()
+
     @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalGridApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,6 +60,7 @@ class InputTestActivity : ComponentActivity() {
         window.isNavigationBarContrastEnforced = false
 
         setContent {
+            val settings by settingsViewModel.settings.collectAsState()
             val stroke = remember { mutableStateListOf<StylusInput>() }
             var lastAction by remember { mutableStateOf<InputProcessor.Action?>(null) }
             var canvasTransform by remember { mutableStateOf(Matrix()) }
@@ -121,7 +128,7 @@ class InputTestActivity : ComponentActivity() {
                         val lastAction = lastAction
 
                         CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.bodyMedium) {
-                            Text("Finger drawing: On \u2022 Touch slop: 10px")
+                            Text("Touch drawing: ${if (settings.input.fingerDrawing) "On" else "Off"} \u2022 Touch slop: 10px")
 
                             Spacer(Modifier.height(8.dp))
 
@@ -199,6 +206,7 @@ class InputTestActivity : ComponentActivity() {
                             .fillMaxSize(),
                         factory = ::TestInputView
                     ) {
+                        it.fingerDrawing = settings.input.fingerDrawing
                         it.onActions = { actions ->
                             actions.lastOrNull()?.let { lastAction = it }
 
@@ -233,6 +241,10 @@ class InputTestActivity : ComponentActivity() {
                 this@TestInputView.requestUnbufferedDispatch(event)
             }
         }
+
+        var fingerDrawing
+            get() = processor.fingerDrawing
+            set(value) { processor.fingerDrawing = value }
 
         var onActions: ((List<InputProcessor.Action>) -> Unit)? = null
 

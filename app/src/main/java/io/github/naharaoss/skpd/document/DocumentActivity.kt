@@ -63,6 +63,7 @@ import io.github.naharaoss.skpd.brush.BrushListViewModel
 import io.github.naharaoss.skpd.brush.BrushType
 import io.github.naharaoss.skpd.brush.ui.BrushPicker
 import io.github.naharaoss.skpd.document.ui.DocumentView
+import io.github.naharaoss.skpd.settings.SettingsViewModel
 import io.github.naharaoss.skpd.ui.component.resourceIdFromNamedIcon
 import io.github.naharaoss.skpd.ui.theme.SketchpadTheme
 import kotlinx.coroutines.launch
@@ -74,6 +75,7 @@ import kotlin.jvm.java
  */
 @AndroidEntryPoint
 class DocumentActivity : ComponentActivity() {
+    private val settingsViewModel: SettingsViewModel by viewModels()
     private val documentViewModel: DocumentViewModel by viewModels()
     private val brushListViewModel: BrushListViewModel by viewModels()
 
@@ -86,6 +88,7 @@ class DocumentActivity : ComponentActivity() {
         window.insetsController!!.hide(WindowInsets.Type.navigationBars())
 
         setContent {
+            val settings by settingsViewModel.settings.collectAsState()
             val windowSizeClass = calculateWindowSizeClass(this)
             var transform by remember { mutableStateOf(Matrix()) }
             val brushes by brushListViewModel.brushes.collectAsState()
@@ -126,6 +129,7 @@ class DocumentActivity : ComponentActivity() {
                     it.brushPreset = selectedBrushPreset
                     it.brushColor = Color.Black
                     it.canvasTransform = transform
+                    it.fingerDrawing = settings.input.fingerDrawing
                     it.onTransform = { matrix ->
                         val newTransform = Matrix(transform.values.clone())
                         newTransform *= matrix

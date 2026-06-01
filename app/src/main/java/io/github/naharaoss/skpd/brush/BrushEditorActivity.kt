@@ -70,10 +70,12 @@ import io.github.naharaoss.skpd.brush.ui.BrushMetadata
 import io.github.naharaoss.skpd.brush.ui.DynamicEditScreen
 import io.github.naharaoss.skpd.brush.ui.DynamicMetadata
 import io.github.naharaoss.skpd.brush.ui.ScratchpadView
+import io.github.naharaoss.skpd.settings.SettingsViewModel
 import io.github.naharaoss.skpd.ui.theme.SketchpadTheme
 
 @AndroidEntryPoint
 class BrushEditorActivity : ComponentActivity() {
+    private val settingsViewModel: SettingsViewModel by viewModels()
     private val brushListViewModel: BrushListViewModel by viewModels()
 
     @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
@@ -84,6 +86,7 @@ class BrushEditorActivity : ComponentActivity() {
         window.isNavigationBarContrastEnforced = false
 
         setContent {
+            val settings by settingsViewModel.settings.collectAsState()
             val windowSizeClass = calculateWindowSizeClass(this)
             val brushes by brushListViewModel.brushes.collectAsState()
             var backStack by rememberSerializable { mutableStateOf(listOf<BrushEditorRoute>(BrushEditorRoute.BrushList)) }
@@ -194,6 +197,7 @@ class BrushEditorActivity : ComponentActivity() {
                         factory = { ScratchpadView(it) }
                     ) {
                         val preset = preset
+                        it.fingerDrawing = settings.input.fingerDrawing
 
                         if (preset != null) {
                             it.enableScratchpad = true

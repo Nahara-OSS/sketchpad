@@ -27,6 +27,8 @@ fun SettingsPage(
 
         is SettingsRoute.Input -> InputSettingsPage(
             modifier = modifier,
+            settings = settings.input,
+            onSettingsChange = { viewModel.changeSettings(settings.copy(input = it)) },
             onOpenInputTester = onOpenInputTester
         )
 
