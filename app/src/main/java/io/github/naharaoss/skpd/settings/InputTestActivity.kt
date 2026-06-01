@@ -227,6 +227,8 @@ class InputTestActivity : ComponentActivity() {
 
     private class TestInputView(context: Context) : View(context) {
         private val processor = object : InputProcessor(true, 10f) {
+            override val width: Float get() = this@TestInputView.width.toFloat()
+            override val height: Float get() = this@TestInputView.height.toFloat()
             override fun requestUnbufferedDispatch(event: MotionEvent) {
                 this@TestInputView.requestUnbufferedDispatch(event)
             }

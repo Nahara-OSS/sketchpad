@@ -133,6 +133,9 @@ class ScratchpadView(context: Context) : GLSurfaceView(context) {
 //    private var lastInput: StylusInput? = null
 //    private var strokeJitter = 0f
     private val inputProcessor = object : InputProcessor(fingerDrawing = true, touchSlop = 10f) {
+        override val width: Float get() = this@ScratchpadView.width.toFloat()
+        override val height: Float get() = this@ScratchpadView.height.toFloat()
+
         override fun requestUnbufferedDispatch(event: MotionEvent) {
             this@ScratchpadView.requestUnbufferedDispatch(event)
         }

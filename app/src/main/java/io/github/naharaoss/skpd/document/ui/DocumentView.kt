@@ -21,6 +21,8 @@ import javax.microedition.khronos.opengles.GL10
 
 class DocumentView(context: Context) : GLSurfaceView(context) {
     private val inputProcessor = object : InputProcessor(fingerDrawing = true, touchSlop = 10f) {
+        override val width: Float get() = this@DocumentView.width.toFloat()
+        override val height: Float get() = this@DocumentView.height.toFloat()
         override fun requestUnbufferedDispatch(event: MotionEvent) = this@DocumentView.requestUnbufferedDispatch(event)
     }
 
