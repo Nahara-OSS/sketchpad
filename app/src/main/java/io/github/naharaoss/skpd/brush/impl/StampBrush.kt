@@ -368,7 +368,7 @@ object StampBrush : BrushType<StampBrush.Preset> {
     private class InternalTile(tileRect: Rect) : AutoCloseable {
         val colorTexture = GLTexture2D()
         val depthTexture = GLTexture2D()
-        val framebuffer = GLFramebuffer()
+        val framebuffer = GLFramebuffer(tileRect.width.toInt(), tileRect.height.toInt())
 
         init {
             colorTexture.bind {
@@ -507,7 +507,7 @@ object StampBrush : BrushType<StampBrush.Preset> {
          * @param [transform] Transform matrix
          * @param [color] Brush color
          */
-        fun use(
+        fun draw(
             falloff: GLTexture2D,
             stamps: Buffer,
             count: Int,
@@ -740,11 +740,9 @@ object StampBrush : BrushType<StampBrush.Preset> {
             transform.translate(x = -tileRect.left, y = -tileRect.top)
 
             tile.framebuffer.bind {
-                setViewport(0, 0, tileRect.width.toInt(), tileRect.height.toInt())
-
                 when (preset.tip) {
-                    is Preset.BrushTip.Circle -> circleBrushProgram.use(falloffGraph!!, stamps, stampCount, transform, color)
-                    is Preset.BrushTip.Square -> squareBrushProgram.use(falloffGraph!!, stamps, stampCount, transform, color)
+                    is Preset.BrushTip.Circle -> circleBrushProgram.draw(falloffGraph!!, stamps, stampCount, transform, color)
+                    is Preset.BrushTip.Square -> squareBrushProgram.draw(falloffGraph!!, stamps, stampCount, transform, color)
                 }
             }
         }

@@ -48,7 +48,7 @@ class ScratchpadView(context: Context) : GLSurfaceView(context) {
                 wrapT = GLTexture2D.WrapMode.Clamp
             }
 
-            scratchpadFramebuffer = GLFramebuffer()
+            scratchpadFramebuffer = GLFramebuffer(1024, 1024)
             scratchpadFramebuffer.bind {
                 attach(GLFramebuffer.Attachment.Color(0), scratchpadTexture)
                 ensureCompleted()
@@ -73,9 +73,20 @@ class ScratchpadView(context: Context) : GLSurfaceView(context) {
             this.height = height
 
             scratchpadTexture.bind {
-                GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA, width, height, 0, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, null)
+                GLES30.glTexImage2D(
+                    GLES30.GL_TEXTURE_2D,
+                    0,
+                    GLES30.GL_RGBA,
+                    width,
+                    height,
+                    0,
+                    GLES30.GL_RGBA,
+                    GLES30.GL_UNSIGNED_BYTE,
+                    null
+                )
             }
 
+            scratchpadFramebuffer = scratchpadFramebuffer.copy(width = width, height = height)
             scratchpadFramebuffer.bind {
                 setViewport(0, 0, width, height)
                 setClearColor(Color.Transparent)
@@ -88,7 +99,7 @@ class ScratchpadView(context: Context) : GLSurfaceView(context) {
             GLES30.glBlendFunc(GLES30.GL_ONE, GLES30.GL_ONE_MINUS_SRC_ALPHA)
             GLES30.glBlendEquation(GLES30.GL_FUNC_ADD)
 
-            GLFramebuffer.Default.bind {
+            GLFramebuffer.default(width, height).bind {
                 setViewport(0, 0, width, height)
                 setClearColor(Color.White)
                 clear(GLFramebuffer.ClearType.Color)
@@ -98,7 +109,7 @@ class ScratchpadView(context: Context) : GLSurfaceView(context) {
             brushRenderer.renderTile(
                 tileKey = Unit,
                 tileRect = rect,
-                framebuffer = GLFramebuffer.Default,
+                framebuffer = GLFramebuffer.default(width, height),
                 transform = Matrix()
             )
 

@@ -10,7 +10,7 @@ import java.nio.Buffer
 @WorkerThread
 class TileTexture(private val tileSize: Int, buffer: Buffer?) : AutoCloseable {
     val texture = GLTexture2D()
-    val framebuffer = GLFramebuffer()
+    val framebuffer = GLFramebuffer(tileSize, tileSize)
 
     init {
         texture.bind {

@@ -88,14 +88,9 @@ class LayerRenderer internal constructor(val parent: DocumentRenderer, val layer
             }
         } else {
             pendingTile.framebuffer.bind {
-                setViewport(0, 0, tileSize, tileSize)
                 setClearColor(Color.Transparent)
                 clear(GLFramebuffer.ClearType.Color)
             }
-        }
-
-        pendingTile.framebuffer.bind {
-            setViewport(0, 0, tileSize, tileSize)
         }
 
         GLES30.glEnable(GLES30.GL_BLEND)

@@ -144,7 +144,7 @@ class DocumentView(context: Context) : GLSurfaceView(context) {
         }
 
         override fun onDrawFrame(gl: GL10?) {
-            GLFramebuffer.Default.bind {
+            GLFramebuffer.default(width, height).bind {
                 setViewport(0, 0, width, height)
                 setClearColor(Color.White)
                 clear(GLFramebuffer.ClearType.Color)
@@ -153,7 +153,7 @@ class DocumentView(context: Context) : GLSurfaceView(context) {
             documentRenderer?.render(
                 viewport = viewport,
                 canvasTransform = canvasTransform,
-                framebuffer = GLFramebuffer.Default
+                framebuffer = GLFramebuffer.default(width, height)
             )
         }
 

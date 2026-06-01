@@ -101,8 +101,4 @@ private fun appBarTitlesByRoute(route: SettingsRoute) = when (route) {
         title = stringResource(R.string.settings_category_about_title),
         subtitle = stringResource(R.string.settings_category_about_subtitle)
     )
-    else -> AppBarTitles(
-        title = "Settings",
-        subtitle = "Unknown category"
-    )
 }

@@ -214,7 +214,7 @@ private class BrushPreviewRenderThread(
                             topLeft = Offset.Zero,
                             bottomRight = Offset(x = width.toFloat(), y = height.toFloat())
                         ),
-                        framebuffer = GLFramebuffer.Default,
+                        framebuffer = GLFramebuffer.default(width, height),
                         transform = Matrix()
                     )
 

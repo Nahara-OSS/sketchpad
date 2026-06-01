@@ -119,20 +119,32 @@ data class GLTexture2D(val id: Int) : AutoCloseable {
     }
 }
 
-data class GLFramebuffer(val id: Int) : AutoCloseable {
-    constructor() : this(IntArray(1).also { GLES30.glGenFramebuffers(1, it, 0) }[0])
+data class GLFramebuffer(val id: Int, val width: Int, val height: Int) : AutoCloseable {
+    constructor(width: Int, height: Int) : this(
+        id = IntArray(1).also { GLES30.glGenFramebuffers(1, it, 0) }[0],
+        width = width,
+        height = height
+    )
 
     fun bind(target: Target = Target.Framebuffer, block: Scope.() -> Unit = {}) {
         GLES30.glBindFramebuffer(target.gl, id)
+        GLES30.glViewport(0, 0, width, height)
         Scope(target, this).block()
     }
 
     override fun close() {
+        if (id == 0) throw Exception("Cannot release default framebuffer")
         GLES30.glDeleteFramebuffers(1, intArrayOf(id), 0)
     }
 
     companion object {
-        val Default = GLFramebuffer(0)
+        /**
+         * Create reference to default framebuffer.
+         *
+         * @param [width] The width of default framebuffer
+         * @param [height] The height of default framebuffer
+         */
+        fun default(width: Int, height: Int): GLFramebuffer = GLFramebuffer(0, width, height)
     }
 
     data class Scope(val target: Target, val framebuffer: GLFramebuffer) {
@@ -157,9 +169,11 @@ data class GLFramebuffer(val id: Int) : AutoCloseable {
             }
         }
 
+        fun resetViewport() = GLES30.glViewport(0, 0, framebuffer.width, framebuffer.height)
         fun setViewport(x: Int, y: Int, width: Int, height: Int) = GLES30.glViewport(x, y, width, height)
         fun setClearColor(color: Color) = GLES30.glClearColor(color.red, color.green, color.blue, color.alpha)
         fun setClearDepth(depth: Float) = GLES30.glClearDepthf(depth)
+        fun setClearStencil(stencil: Int) = GLES30.glClearStencil(stencil)
         fun clear(vararg types: ClearType) = GLES30.glClear(types.map { it.gl }.reduce { acc, type -> acc or type })
     }
 
@@ -181,7 +195,8 @@ data class GLFramebuffer(val id: Int) : AutoCloseable {
 
     enum class ClearType(val gl: Int) {
         Color(GLES30.GL_COLOR_BUFFER_BIT),
-        Depth(GLES30.GL_DEPTH_BUFFER_BIT)
+        Depth(GLES30.GL_DEPTH_BUFFER_BIT),
+        Stencil(GLES30.GL_STENCIL)
     }
 }
 
