@@ -196,7 +196,7 @@ data class GLFramebuffer(val id: Int, val width: Int, val height: Int) : AutoClo
     enum class ClearType(val gl: Int) {
         Color(GLES30.GL_COLOR_BUFFER_BIT),
         Depth(GLES30.GL_DEPTH_BUFFER_BIT),
-        Stencil(GLES30.GL_STENCIL)
+        Stencil(GLES30.GL_STENCIL_BUFFER_BIT)
     }
 }
 
