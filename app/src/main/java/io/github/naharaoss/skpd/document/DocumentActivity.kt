@@ -18,14 +18,12 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,12 +32,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ScaffoldDefaults
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
@@ -62,12 +56,11 @@ import io.github.naharaoss.skpd.brush.BrushEditorActivity
 import io.github.naharaoss.skpd.brush.BrushListViewModel
 import io.github.naharaoss.skpd.brush.BrushType
 import io.github.naharaoss.skpd.brush.ui.BrushPicker
-import io.github.naharaoss.skpd.document.ui.DocumentView
+import io.github.naharaoss.skpd.document.ui.RegularDocumentView
 import io.github.naharaoss.skpd.settings.SettingsViewModel
 import io.github.naharaoss.skpd.ui.component.resourceIdFromNamedIcon
 import io.github.naharaoss.skpd.ui.theme.SketchpadTheme
 import kotlinx.coroutines.launch
-import kotlin.jvm.java
 
 /**
  * The activity for Sketchpad documents. Open this activity with document UID to open existing
@@ -123,14 +116,15 @@ class DocumentActivity : ComponentActivity() {
             SketchpadTheme {
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
-                    factory = { DocumentView(it) }
+                    factory = { RegularDocumentView(it) }
                 ) {
                     it.document = documentViewModel.document
+                    it.layer = documentViewModel.document.layers.first()
                     it.brushPreset = selectedBrushPreset
                     it.brushColor = Color.Black
                     it.canvasTransform = transform
                     it.fingerDrawing = settings.input.fingerDrawing
-                    it.onTransform = { matrix ->
+                    it.onTransformGesture = { matrix ->
                         val newTransform = Matrix(transform.values.clone())
                         newTransform *= matrix
                         transform = newTransform

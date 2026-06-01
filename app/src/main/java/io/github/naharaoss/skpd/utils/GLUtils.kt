@@ -3,6 +3,7 @@ package io.github.naharaoss.skpd.utils
 import android.opengl.GLES30
 import android.util.Log
 import androidx.compose.ui.graphics.Color
+import androidx.graphics.lowlatency.BufferInfo
 import java.nio.Buffer
 
 fun checkGLError() {
@@ -199,6 +200,8 @@ data class GLFramebuffer(val id: Int, val width: Int, val height: Int) : AutoClo
         Stencil(GLES30.GL_STENCIL_BUFFER_BIT)
     }
 }
+
+fun BufferInfo.toGLFramebuffer() = GLFramebuffer(frameBufferId, width, height)
 
 data class GLBuffer(val id: Int) : AutoCloseable {
     constructor() : this(IntArray(1).also { GLES30.glGenBuffers(1, it, 0) }[0])
