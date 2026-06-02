@@ -73,8 +73,13 @@ class LayerRenderer internal constructor(val parent: DocumentRenderer, val layer
      *
      * @param [address] Address of the tile being touched by brush
      * @param [brushRenderer] The brush renderer
+     * @param [blend] Brush stroke blending mode
      */
-    fun useBrush(address: TileAddress, brushRenderer: BrushType.Renderer<*>) {
+    fun useBrush(
+        address: TileAddress,
+        brushRenderer: BrushType.Renderer<*>,
+        blend: BlendMode
+    ) {
         val tile = getOrTemporarilyLoadTile(address)
         val pendingTile = pendingTiles.getOrPut(address, { TileTexture(tileSize, null) })
         pendingTiles[address] = pendingTile
@@ -94,7 +99,7 @@ class LayerRenderer internal constructor(val parent: DocumentRenderer, val layer
         }
 
         GLES30.glEnable(GLES30.GL_BLEND)
-        BlendMode.SourceOver.toBlendState().use()
+        blend.toBlendState().use()
 
         brushRenderer.renderTile(
             tileKey = address,

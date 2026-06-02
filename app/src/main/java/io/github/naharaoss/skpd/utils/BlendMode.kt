@@ -10,4 +10,7 @@ enum class BlendMode {
      */
     @SerialName("source-over")
     SourceOver,
+
+    @SerialName("erase")
+    Erase,
 }

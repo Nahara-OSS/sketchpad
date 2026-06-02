@@ -336,4 +336,9 @@ fun BlendMode.toBlendState(): GLBlendState = when (this) {
         rgbSrcFactor = GLBlendState.Factor.One,
         rgbDstFactor = GLBlendState.Factor.OneMinusSrcAlpha
     )
+    BlendMode.Erase -> GLBlendState(
+        rgbFunction = GLBlendState.Function.Add,
+        rgbSrcFactor = GLBlendState.Factor.Zero,
+        rgbDstFactor = GLBlendState.Factor.OneMinusSrcAlpha
+    )
 }

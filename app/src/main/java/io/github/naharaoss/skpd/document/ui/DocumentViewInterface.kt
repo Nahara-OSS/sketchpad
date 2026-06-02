@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Matrix
 import io.github.naharaoss.skpd.brush.BrushType
 import io.github.naharaoss.skpd.document.DocumentAccess
+import io.github.naharaoss.skpd.utils.BlendMode
 
 /**
  * Common interface for Android views that can draw on Sketchpad documents.
@@ -82,6 +83,13 @@ interface DocumentViewInterface {
      * The initial color is [Color.Black].
      */
     var brushColor: Color
+
+    /**
+     * Current brush blending mode.
+     *
+     * The blend mode temporarily switch to [BlendMode.Erase] if eraser is active.
+     */
+    var brushBlend: BlendMode
 
     /**
      * Callback for transform gesture.

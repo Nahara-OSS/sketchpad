@@ -14,6 +14,7 @@ import io.github.naharaoss.skpd.brush.InputProcessor
 import io.github.naharaoss.skpd.brush.StylusInput
 import io.github.naharaoss.skpd.document.DocumentAccess
 import io.github.naharaoss.skpd.document.graphics.DocumentRenderer
+import io.github.naharaoss.skpd.utils.BlendMode
 import io.github.naharaoss.skpd.utils.GLFramebuffer
 import io.github.naharaoss.skpd.utils.calculateVisibleTiles
 import javax.microedition.khronos.egl.EGLConfig
@@ -108,6 +109,8 @@ class RegularDocumentView(context: Context) : GLSurfaceView(context), DocumentVi
             requestRender()
         }
 
+    override var brushBlend: BlendMode = BlendMode.SourceOver
+
     init {
         setEGLContextClientVersion(2)
         setRenderer(renderer)
@@ -134,20 +137,21 @@ class RegularDocumentView(context: Context) : GLSurfaceView(context), DocumentVi
                     clipToCanvas.invert()
                     val canvasPosition = clipToCanvas.map(clipPosition)
                     val input = action.input.copy(x = canvasPosition.x, y = canvasPosition.y)
+                    val brushBlend = if (action.eraser) BlendMode.Erase else brushBlend
 
                     queueEvent {
                         when (action.kind) {
                             InputProcessor.Action.Stylus.Kind.Down -> {
                                 renderer.beginStroke()
-                                renderer.consumeInput(input)
+                                renderer.consumeInput(input, brushBlend)
                             }
 
                             InputProcessor.Action.Stylus.Kind.Move -> {
-                                renderer.consumeInput(input)
+                                renderer.consumeInput(input, brushBlend)
                             }
 
                             InputProcessor.Action.Stylus.Kind.Up -> {
-                                renderer.consumeInput(input)
+                                renderer.consumeInput(input, brushBlend)
                                 renderer.endStroke()
                             }
                         }
@@ -286,7 +290,7 @@ class RegularDocumentView(context: Context) : GLSurfaceView(context), DocumentVi
             brushRenderer.beginStroke()
         }
 
-        fun consumeInput(input: StylusInput) {
+        fun consumeInput(input: StylusInput, blend: BlendMode) {
             val documentRenderer = documentRenderer ?: return
             val brushRenderer = brushRenderer ?: return
             val layer = layer ?: return
@@ -300,7 +304,7 @@ class RegularDocumentView(context: Context) : GLSurfaceView(context), DocumentVi
             )
 
             for (address in affectedTiles) {
-                layerRenderer.useBrush(address, brushRenderer)
+                layerRenderer.useBrush(address, brushRenderer, blend)
             }
         }
 
