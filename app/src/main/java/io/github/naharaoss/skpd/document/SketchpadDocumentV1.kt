@@ -84,7 +84,8 @@ class SketchpadDocumentV1 private constructor(private val container: ContainerDo
         }
 
         for (layer in _layerStack.layers) {
-            _layers[layer.id] = Layer(this, layer.id, layerChunks[layer.id]!!)
+            val layerInfo = layerStack.layers.first { it.id == layer.id }
+            _layers[layer.id] = Layer(this, layer.id, layerChunks[layer.id]!!, layerInfo)
         }
     }
 
@@ -108,7 +109,7 @@ class SketchpadDocumentV1 private constructor(private val container: ContainerDo
             layerChunk
         }
 
-        val layer = Layer(this, id, layerChunk)
+        val layer = Layer(this, id, layerChunk, info)
         _layers[id] = layer
         layerStack = layerStack.copy(layers = layerStack.layers + info)
         return layer
@@ -137,7 +138,7 @@ class SketchpadDocumentV1 private constructor(private val container: ContainerDo
      * Chunk type is [CHUNK_TYPE_LAYER_STACK]
      */
     @Serializable
-    private data class LayerStack(
+    internal data class LayerStack(
         val layers: List<LayerInfo>,
         @Serializable(with = UUIDSerializer::class) val active: UUID?
     ) {
@@ -153,12 +154,14 @@ class SketchpadDocumentV1 private constructor(private val container: ContainerDo
 
     class Layer internal constructor(
         private val document: SketchpadDocumentV1,
-        val id: UUID,
-        internal var chunk: ContainerDocument.Data
+        override val id: UUID,
+        internal var chunk: ContainerDocument.Data,
+        private var _layerInfo: LayerStack.LayerInfo
     ) : DocumentAccess.Layer {
         private var layerInfo
-            get() = document.layerStack.layers.first { it.id == id }
+            get() = _layerInfo
             set(value) {
+                _layerInfo = value
                 val layerStack = document.layerStack
                 val layers = layerStack.layers.map { if (it.id == id) value else it }
                 document.layerStack = layerStack.copy(layers = layers)
@@ -166,7 +169,7 @@ class SketchpadDocumentV1 private constructor(private val container: ContainerDo
 
         internal val tiles = mutableMapOf<TileAddress, SavedTile>()
 
-        var name: String
+        override var name: String
             get() = layerInfo.name
             set(value) { layerInfo = layerInfo.copy(name = value) }
 
@@ -255,7 +258,13 @@ class SketchpadDocumentV1 private constructor(private val container: ContainerDo
          * Delete layer from the document.
          */
         fun delete() {
-            document.layerStack = document.layerStack.copy(layers = document.layerStack.layers.dropWhile { it.id == id })
+            document.layerStack = document.layerStack.copy(
+                layers = document.layerStack.layers.filter { it.id != id },
+                active = if (document.layerStack.active != id) document.layerStack.active else {
+                    val index = document.layers.indexOfFirst { it.id == id }
+                    document.layers.getOrNull(index - 1)?.id
+                }
+            )
 
             document.ioLock.withLock {
                 document.container.delete(chunk)

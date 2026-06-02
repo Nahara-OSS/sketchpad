@@ -98,4 +98,9 @@ interface DocumentViewInterface {
      * with up to 5 fingers.
      */
     var onTapGesture: ((fingers: Int) -> Unit)?
+
+    /**
+     * Manually trigger document update.
+     */
+    fun triggerDocumentUpdate()
 }

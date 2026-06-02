@@ -50,7 +50,7 @@ class LayerRenderer internal constructor(val parent: DocumentRenderer, val layer
         val tile = temporaryTiles[address] ?: tiles[address]
 
         if (tile == null && layer.isTileExists(address)) {
-            Log.d("LayerRenderer", "Temporarily loading $address")
+            Log.d("LayerRenderer", "${layer.name} Temporarily loading $address")
             val buffer = ByteBuffer.allocateDirect(tileSize * tileSize * 4).order(ByteOrder.nativeOrder())
             layer.loadTile(address, buffer)
             buffer.flip()

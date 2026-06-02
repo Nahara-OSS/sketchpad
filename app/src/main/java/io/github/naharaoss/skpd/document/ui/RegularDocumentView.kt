@@ -114,6 +114,11 @@ class RegularDocumentView(context: Context) : GLSurfaceView(context), DocumentVi
         renderMode = RENDERMODE_WHEN_DIRTY
     }
 
+    override fun triggerDocumentUpdate() {
+        queueEvent { renderer.update() }
+        requestRender()
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         if (event == null) return super.onTouchEvent(event)
@@ -225,6 +230,10 @@ class RegularDocumentView(context: Context) : GLSurfaceView(context), DocumentVi
                     stencil = true
                 )
             }
+        }
+
+        fun update() {
+            documentRenderer?.update(viewport, canvasTransform)
         }
 
         fun setDocument(document: DocumentAccess?) {

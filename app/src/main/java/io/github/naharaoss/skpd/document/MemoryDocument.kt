@@ -33,11 +33,12 @@ class MemoryDocument(
 
     class Layer(
         private val document: MemoryDocument,
-        var name: String,
+        override var name: String,
         override var visible: Boolean,
         override var blend: BlendMode,
         override var opacity: Float
     ) : DocumentAccess.Layer {
+        override val id: Any get() = this
         val lock = ReentrantLock()
         val tiles = mutableMapOf<TileAddress, ByteArray>()
 

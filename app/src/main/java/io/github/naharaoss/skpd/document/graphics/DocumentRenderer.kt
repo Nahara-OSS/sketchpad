@@ -44,7 +44,7 @@ class DocumentRenderer(val document: DocumentAccess) : AutoCloseable {
 
         val loadTiles = newVisibleTiles.subtract(visibleTiles)
         val unloadTiles = visibleTiles.subtract(newVisibleTiles)
-        val unloadLayers = document.layers.toMutableSet()
+        val unloadLayers = layerRenderers.keys.toMutableSet()
         visibleTiles = newVisibleTiles
 
         for (layer in document.layers) {
@@ -80,8 +80,8 @@ class DocumentRenderer(val document: DocumentAccess) : AutoCloseable {
         val documentSize = document.size
 
         framebuffer.bind {
-            when {
-                documentSize is Size.Sized -> {
+            when (documentSize) {
+                is Size.Sized -> {
                     if (stencil) {
                         GLES30.glEnable(GLES30.GL_STENCIL_TEST)
                         setClearStencil(0x00)
@@ -109,15 +109,15 @@ class DocumentRenderer(val document: DocumentAccess) : AutoCloseable {
                     }
                 }
 
-                documentSize is Size.Infinite -> {
+                is Size.Infinite -> {
                     setClearColor(document.background)
                     clear(GLFramebuffer.ClearType.Color)
                 }
             }
         }
 
-        for ((_, layer) in layerRenderers) {
-            layer.render(
+        for ((layer, layerRenderer) in layerRenderers) {
+            if (layer.visible) layerRenderer.render(
                 tileProgram = tileProgram,
                 viewport = viewport,
                 canvasTransform = canvasTransform,

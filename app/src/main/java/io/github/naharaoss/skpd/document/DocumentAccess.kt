@@ -30,6 +30,8 @@ interface DocumentAccess {
     fun openWriter(): Writer
 
     interface Layer {
+        val id: Any
+        val name: String
         val visible: Boolean
         val opacity: Float
         val blend: BlendMode
