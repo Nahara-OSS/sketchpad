@@ -616,7 +616,6 @@ object StampBrush : BrushType<StampBrush.Preset> {
                     vec4 sampled = texture(uColorTexture, fUV);
                     float opacity = texture(uDepthTexture, fUV).r;
                     color = sampled * opacity;
-                    color.a = sqrt(color.a);
                 }
             """.trimIndent())
         )
