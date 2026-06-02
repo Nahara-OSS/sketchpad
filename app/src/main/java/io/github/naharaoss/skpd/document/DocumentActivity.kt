@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.naharaoss.skpd.R
 import io.github.naharaoss.skpd.brush.BrushEditorActivity
@@ -69,7 +70,6 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class DocumentActivity : ComponentActivity() {
     private val settingsViewModel: SettingsViewModel by viewModels()
-    private val documentViewModel: DocumentViewModel by viewModels()
     private val brushListViewModel: BrushListViewModel by viewModels()
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
@@ -77,10 +77,19 @@ class DocumentActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        val documentRef = when {
+            intent.hasExtra(EXTRA_DOCUMENT_ID) -> DocumentViewModel.DocumentRef.Local(intent.getLongExtra(EXTRA_DOCUMENT_ID, -1))
+            else -> throw Exception("Don't know where to open document")
+        }
+
         window.isNavigationBarContrastEnforced = false
         window.insetsController!!.hide(WindowInsets.Type.navigationBars())
 
         setContent {
+            val documentViewModel = hiltViewModel(creationCallback = { factory: DocumentViewModel.Factory -> factory.create(documentRef) })
+            val document by documentViewModel.document.collectAsState()
+            val activeLayer by documentViewModel.activeLayer.collectAsState()
+
             val settings by settingsViewModel.settings.collectAsState()
             val windowSizeClass = calculateWindowSizeClass(this)
             var transform by remember { mutableStateOf(Matrix()) }
@@ -89,7 +98,6 @@ class DocumentActivity : ComponentActivity() {
             var selectedBrushIcon: String? by remember { mutableStateOf(null) }
             var selectedBrushPreset: BrushType.Preset? by remember { mutableStateOf(null) }
             var showBrushList by remember { mutableStateOf(false) }
-            val activeLayer by documentViewModel.activeLayer.collectAsState()
 
             LaunchedEffect(selectedBrush) {
                 when (val selectedBrush = selectedBrush) {
@@ -119,7 +127,7 @@ class DocumentActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     factory = { RegularDocumentView(it) }
                 ) {
-                    it.document = documentViewModel.document
+                    it.document = document
                     it.layer = activeLayer
                     it.brushPreset = selectedBrushPreset
                     it.brushColor = Color.Black
@@ -214,5 +222,9 @@ class DocumentActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    companion object {
+        const val EXTRA_DOCUMENT_ID = "documentId"
     }
 }

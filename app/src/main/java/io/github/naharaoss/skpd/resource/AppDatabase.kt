@@ -16,13 +16,16 @@ import androidx.room.Query
 import androidx.room.Relation
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.room.Update
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import io.github.naharaoss.skpd.utils.RoomTypeConverters
 import javax.inject.Singleton
+import kotlin.time.Instant
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -40,6 +43,10 @@ object AppDatabaseModule {
     @Singleton
     @Provides
     fun provideBrushDao(database: AppDatabase): AppDatabase.BrushDao = database.brushDao()
+
+    @Singleton
+    @Provides
+    fun provideLibraryDao(database: AppDatabase): AppDatabase.LibraryDao = database.libraryDao()
 }
 
 @Database(
@@ -52,6 +59,7 @@ object AppDatabaseModule {
         AppDatabase.BrushTag::class
     ]
 )
+@TypeConverters(RoomTypeConverters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun badgeDao(): BadgeDao
     abstract fun libraryDao(): LibraryDao
@@ -69,11 +77,14 @@ abstract class AppDatabase : RoomDatabase() {
 
     @Dao
     interface LibraryDao {
-        @Query("SELECT * FROM library WHERE parentId == NULL")
+        @Query("SELECT * FROM library WHERE parentId IS NULL")
         suspend fun getRoot(): List<LibraryItem>
 
         @Query("SELECT * FROM library WHERE parentId = :parentId")
         suspend fun getChildrenByParentId(parentId: Long): List<LibraryItem>
+
+        @Query("SELECT * FROM library WHERE libraryId = :libraryId")
+        suspend fun getById(libraryId: Long): LibraryItem
 
         @Insert
         suspend fun insert(item: LibraryItem): Long
@@ -181,6 +192,12 @@ abstract class AppDatabase : RoomDatabase() {
 
         @ColumnInfo(name = "name")
         val name: String,
+
+        @ColumnInfo(name = "creationTime")
+        val creationTime: Instant,
+
+        @ColumnInfo(name = "lastModified")
+        val lastModified: Instant,
 
         @ColumnInfo(name = "reference")
         val reference: String?

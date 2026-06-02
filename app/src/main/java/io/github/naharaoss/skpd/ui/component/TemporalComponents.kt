@@ -14,6 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
 @Composable
@@ -37,7 +38,7 @@ fun ElapsedText(time: Instant, modifier: Modifier = Modifier) {
 
     LaunchedEffect(time) {
         while (isActive) {
-            delay(1000)
+            delay(1000.milliseconds)
             now = Clock.System.now()
         }
     }
