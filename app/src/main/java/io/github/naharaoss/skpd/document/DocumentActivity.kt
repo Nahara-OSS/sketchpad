@@ -15,20 +15,27 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalGridApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -85,7 +92,7 @@ class DocumentActivity : ComponentActivity() {
     private val brushListViewModel: BrushListViewModel by viewModels()
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class,
-        ExperimentalMaterial3ExpressiveApi::class
+        ExperimentalMaterial3ExpressiveApi::class, ExperimentalGridApi::class
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -114,6 +121,7 @@ class DocumentActivity : ComponentActivity() {
             val windowSizeClass = calculateWindowSizeClass(this)
             var showBrushList by remember { mutableStateOf(false) }
             var showLayerList by remember { mutableStateOf(false) }
+            var showPalette by remember { mutableStateOf(false) }
             var view by remember { mutableStateOf<DocumentViewInterface?>(null) }
 
             LaunchedEffect(brushes != null) {
@@ -181,6 +189,7 @@ class DocumentActivity : ComponentActivity() {
                                 checked = showBrushList,
                                 onCheckedChange = {
                                     showBrushList = it
+                                    showPalette = false
                                     showLayerList = false
                                 }
                             ) {
@@ -192,12 +201,27 @@ class DocumentActivity : ComponentActivity() {
                                 )
                             }
 
+                            FilledIconToggleButton(
+                                checked = showPalette,
+                                onCheckedChange = {
+                                    showBrushList = false
+                                    showPalette = it
+                                    showLayerList = false
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.palette_24px),
+                                    contentDescription = "Color palette"
+                                )
+                            }
+
                             Spacer(Modifier.weight(1f))
 
                             FilledIconToggleButton(
                                 checked = showLayerList,
                                 onCheckedChange = {
                                     showBrushList = false
+                                    showPalette = false
                                     showLayerList = it
                                 }
                             ) {
@@ -256,6 +280,54 @@ class DocumentActivity : ComponentActivity() {
                                 }
 
                                 false -> Spacer(Modifier.fillMaxWidth())
+                            }
+                        }
+
+                        AnimatedContent(
+                            modifier = Modifier.width(300.dp).align(Alignment.TopStart),
+                            targetState = showPalette,
+                            transitionSpec = {
+                                val enter = fadeIn() + slideInHorizontally { if (targetState) -it else it }
+                                val exit = fadeOut() + slideOutHorizontally { if (targetState) it else -it }
+                                (enter togetherWith exit).using(sizeTransform = SizeTransform(clip = false))
+                            }
+                        ) { show ->
+                            when (show) {
+                                true -> Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    shadowElevation = 2.dp
+                                ) {
+                                    LazyVerticalGrid(
+                                        contentPadding = PaddingValues(4.dp),
+                                        columns = GridCells.FixedSize(48.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        items(listOf(
+                                            Color.Black,
+                                            Color.Gray,
+                                            Color.White,
+                                            Color.Red,
+                                            Color.Yellow,
+                                            Color.Green,
+                                            Color.Blue,
+                                            Color.Magenta
+                                        )) { color ->
+                                            Box(Modifier.size(48.dp)) {
+                                                FilledIconToggleButton(
+                                                    checked = selectedBrushColor == color,
+                                                    onCheckedChange = { if (it) selectedBrushColor = color }
+                                                ) {
+                                                    Box(Modifier.size(24.dp).background(
+                                                        color = color,
+                                                        shape = CircleShape
+                                                    ))
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                false -> Box(Modifier.fillMaxWidth())
                             }
                         }
 
