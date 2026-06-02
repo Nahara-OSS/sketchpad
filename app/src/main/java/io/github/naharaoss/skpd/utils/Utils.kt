@@ -31,6 +31,7 @@ fun <T> List<T>.dropAt(index: Int): List<T> {
 }
 
 fun <T> List<T>.replaceAt(index: Int, e: T): List<T> = subList(0, index) + e + subList(index + 1, size)
+fun <T> Set<T>.toggle(e: T): Set<T> = if (contains(e)) filter { it != e }.toSet() else this + e
 
 fun Rect.union(rect: Rect) = Rect(
     topLeft = Offset(

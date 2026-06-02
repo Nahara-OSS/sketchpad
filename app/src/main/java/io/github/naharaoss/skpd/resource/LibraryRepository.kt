@@ -101,6 +101,12 @@ class LibraryRepository @Inject constructor(
         return item
     }
 
+    suspend fun deleteItem(item: LibraryItem) {
+        val dbItem = dao.getById(item.id)
+        dao.delete(dbItem)
+        _removal.emit(item)
+    }
+
     suspend fun openDocument(document: LibraryItem.Document): SketchpadDocumentV1 {
         val reference = dao.getById(document.id).reference ?: throw Exception("Not a document: ${document.id} (${document.name})")
         val documentRoot = store.referenceRootOf(reference)

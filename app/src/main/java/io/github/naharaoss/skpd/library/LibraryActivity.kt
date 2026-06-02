@@ -1,7 +1,6 @@
 package io.github.naharaoss.skpd.library
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -25,15 +24,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FlexibleBottomAppBar
 import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
@@ -41,7 +45,11 @@ import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleFloatingActionButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.collectAsState
@@ -81,7 +89,8 @@ import io.github.naharaoss.skpd.ui.component.ElapsedText
 import io.github.naharaoss.skpd.ui.component.TooltipIconButton
 import io.github.naharaoss.skpd.ui.theme.SketchpadTheme
 import javax.inject.Inject
-import androidx.core.net.toUri
+import io.github.naharaoss.skpd.library.ui.DeleteDialog
+import io.github.naharaoss.skpd.utils.toggle
 
 @AndroidEntryPoint
 class LibraryActivity : ComponentActivity() {
@@ -99,10 +108,13 @@ class LibraryActivity : ComponentActivity() {
 
         setContent {
             val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+            val snackBar = remember { SnackbarHostState() }
             var backStack by rememberSerializable { mutableStateOf(listOf(LibraryItem.Root)) }
+            var selectedItems by rememberSerializable { mutableStateOf(emptySet<LibraryItem>()) }
             var fabMenu by remember { mutableStateOf(false) }
             var newFolderDialog by remember { mutableStateOf(false) }
             var newDocumentDialog by remember { mutableStateOf(false) }
+            var deleteDialog by remember { mutableStateOf(false) }
             val fadeMotion = tween<Float>(durationMillis = 300, easing = LinearEasing)
             val slideMotion = tween<IntOffset>(300, easing = FastOutSlowInEasing)
 
@@ -110,17 +122,24 @@ class LibraryActivity : ComponentActivity() {
                 fabMenu = false
             }
 
+            BackHandler(selectedItems.isNotEmpty()) {
+                selectedItems = emptySet()
+            }
+
             SketchpadTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
-                        val topAppBarColor = Color.Unspecified // TODO
+                        val topAppBarColor = if (selectedItems.isEmpty()) Color.Unspecified else MaterialTheme.colorScheme.primaryContainer
 
                         LargeFlexibleTopAppBar(
                             title = { Text(stringResource(R.string.title_main)) },
                             subtitle = {
-                                when (val last = backStack.last()) {
-                                    LibraryItem.Root -> Text("Local sketches")
+                                val last = backStack.last()
+
+                                when {
+                                    selectedItems.isNotEmpty() -> Text("${selectedItems.size} selected items")
+                                    last == LibraryItem.Root -> Text("Local sketches")
                                     else -> Text(last.name)
                                 }
                             },
@@ -162,11 +181,12 @@ class LibraryActivity : ComponentActivity() {
                     },
                     floatingActionButton = {
                         AnimatedVisibility(
-                            visible = true, // TODO
+                            visible = selectedItems.isEmpty(),
                             enter = fadeIn(),
                             exit = fadeOut()
                         ) {
                             FloatingActionButtonMenu(
+                                modifier = Modifier.padding(bottom = ScaffoldDefaults.contentWindowInsets.asPaddingValues().calculateBottomPadding()),
                                 expanded = fabMenu,
                                 button = {
                                     ToggleFloatingActionButton(
@@ -206,7 +226,29 @@ class LibraryActivity : ComponentActivity() {
                         }
                     },
                     bottomBar = {
-                        // TODO
+                        AnimatedContent(
+                            targetState = selectedItems.isNotEmpty(),
+                            transitionSpec = {
+                                val enter = slideInVertically { it }
+                                val exit = slideOutVertically { -it }
+                                enter togetherWith exit
+                            }
+                        ) { show ->
+                            when (show) {
+                                true -> FlexibleBottomAppBar {
+                                    TextButton({ deleteDialog = true }) {
+                                        Icon(painterResource(R.drawable.delete_24px), "Delete")
+                                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                                        Text("Delete")
+                                    }
+                                }
+
+                                false -> Spacer(Modifier.fillMaxWidth())
+                            }
+                        }
+                    },
+                    snackbarHost = {
+                        SnackbarHost(hostState = snackBar)
                     }
                 ) { innerPadding ->
                     NavDisplay(
@@ -282,6 +324,7 @@ class LibraryActivity : ComponentActivity() {
                                             ) {
                                                 items(folders, key = { it.id }) { folder ->
                                                     LibraryCard(
+                                                        selected = selectedItems.contains(folder),
                                                         metadata = {
                                                             LibraryCardMetadata(
                                                                 title = { Text(folder.name) },
@@ -291,8 +334,15 @@ class LibraryActivity : ComponentActivity() {
                                                                 }
                                                             )
                                                         },
-                                                        onClick = { backStack = backStack + folder },
-                                                        onLongClick = {}
+                                                        onClick = {
+                                                            if (selectedItems.isNotEmpty()) {
+                                                                selectedItems = selectedItems.toggle(folder)
+                                                                return@LibraryCard
+                                                            }
+
+                                                            backStack = backStack + folder
+                                                        },
+                                                        onLongClick = { selectedItems = selectedItems.toggle(folder) }
                                                     )
                                                 }
 
@@ -302,6 +352,7 @@ class LibraryActivity : ComponentActivity() {
 
                                                 items(documents, key = { it.id }) { document ->
                                                     LibraryCard(
+                                                        selected = selectedItems.contains(document),
                                                         preview = { LibraryDocumentPreview() },
                                                         metadata = {
                                                             LibraryCardMetadata(
@@ -313,11 +364,16 @@ class LibraryActivity : ComponentActivity() {
                                                             )
                                                         },
                                                         onClick = {
+                                                            if (selectedItems.isNotEmpty()) {
+                                                                selectedItems = selectedItems.toggle(document)
+                                                                return@LibraryCard
+                                                            }
+
                                                             val intent = Intent(this@LibraryActivity, DocumentActivity::class.java)
                                                             intent.putExtra(DocumentActivity.EXTRA_DOCUMENT_ID, document.id)
                                                             startActivity(intent)
                                                         },
-                                                        onLongClick = {}
+                                                        onLongClick = { selectedItems = selectedItems.toggle(document) }
                                                     )
                                                 }
                                             }
@@ -345,6 +401,26 @@ class LibraryActivity : ComponentActivity() {
                                             val intent = Intent(this@LibraryActivity, DocumentActivity::class.java)
                                             intent.putExtra(DocumentActivity.EXTRA_DOCUMENT_ID, document.id)
                                             startActivity(intent)
+                                        }
+                                    )
+                                }
+
+                                if (deleteDialog) {
+                                    DeleteDialog(
+                                        items = selectedItems,
+                                        onDismiss = { deleteDialog = false },
+                                        onConfirm = {
+                                            val items = selectedItems
+                                            for (item in items) folderViewModel.deleteItem(item)
+                                            selectedItems = emptySet()
+                                            deleteDialog = false
+
+                                            snackBar.showSnackbar(
+                                                message = when {
+                                                    items.size == 1 -> "Deleted ${items.first().name}"
+                                                    else -> "Deleted ${items.size} items"
+                                                }
+                                            )
                                         }
                                     )
                                 }

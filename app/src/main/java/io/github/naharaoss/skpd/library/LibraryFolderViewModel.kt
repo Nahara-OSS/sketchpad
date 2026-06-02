@@ -45,6 +45,7 @@ class LibraryFolderViewModel @AssistedInject constructor(
 
     suspend fun createFolder(name: String) = libraryRepository.createFolder(folder, name)
     suspend fun createDocument(name: String, size: Size) = libraryRepository.createDocument(folder, name, size, Color.White)
+    suspend fun deleteItem(item: LibraryItem) = libraryRepository.deleteItem(item)
 
     @AssistedFactory
     interface Factory {

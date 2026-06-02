@@ -47,6 +47,7 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import io.github.naharaoss.skpd.R
+import io.github.naharaoss.skpd.resource.LibraryItem
 import io.github.naharaoss.skpd.ui.component.FancyDialog
 import io.github.naharaoss.skpd.ui.component.FancyDialogText
 import io.github.naharaoss.skpd.utils.Size
@@ -359,6 +360,54 @@ fun NewDocumentDialog(
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
+    }
+}
+
+@Composable
+fun DeleteDialog(
+    onDismiss: () -> Unit,
+    onConfirm: suspend () -> Unit,
+    items: Set<LibraryItem>
+) {
+    val scope = rememberCoroutineScope()
+    var deleting by remember { mutableStateOf(false) }
+
+    FancyDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                painter = painterResource(R.drawable.edit_24px),
+                contentDescription = "Rename"
+            )
+        },
+        title = { Text("Rename") },
+        buttons = {
+            TextButton(
+                enabled = !deleting,
+                onClick = onDismiss
+            ) {
+                Text("Cancel")
+            }
+            TextButton(
+                enabled = !deleting,
+                onClick = {
+                    scope.launch {
+                        deleting = true
+                        onConfirm()
+                        deleting = false
+                    }
+                }
+            ) {
+                Text("Confirm")
+            }
+        }
+    ) {
+        FancyDialogText {
+            when {
+                items.size == 1 -> Text("Are you sure you want to delete ${items.first().name}?")
+                else -> Text("Are you sure you want to delete ${items.size} items?")
+            }
+        }
     }
 }
 
