@@ -1,5 +1,6 @@
 package io.github.naharaoss.skpd.utils
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.nio.ByteBuffer
 
@@ -12,6 +13,7 @@ sealed interface Size {
      * user to draw pretty much anywhere.
      */
     @Serializable
+    @SerialName("infinite")
     object Infinite : Size
 
     /**
@@ -21,6 +23,7 @@ sealed interface Size {
      * rectangular bounds.
      */
     @Serializable
+    @SerialName("sized")
     data class Sized(val width: Int, val height: Int) : Size {
         init {
             // We could just use UInt...

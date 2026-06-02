@@ -2,6 +2,7 @@ package io.github.naharaoss.skpd.utils
 
 import java.nio.ByteBuffer
 import java.util.UUID
+import kotlin.experimental.and
 
 fun ByteBuffer.putIntWithMax(value: Int, max: Int): ByteBuffer = when {
     max <= 0x7F -> put(value.toByte())
@@ -34,4 +35,14 @@ fun ByteBuffer.getUUID(): UUID {
     val lsb = getLong()
     val msb = getLong()
     return UUID(msb, lsb)
+}
+
+fun ByteBuffer.putInt24(value: Int): ByteBuffer = this
+    .put((value and 0x0000FF).toByte())
+    .putShort(((value and 0xFFFF00) shr 8).toShort())
+
+fun ByteBuffer.getInt24(): Int {
+    val lsb = get().toInt() and 0xFF
+    val msb = (getShort().toInt() and 0xFFFF) shl 8
+    return lsb or msb
 }

@@ -14,7 +14,7 @@ kotlinxSerialization = "1.11.0"
 navigation3 = "1.1.2"
 lifecycleViewmodelNav3 = "2.11.0-beta02"
 hilt = "2.59.2"
-naharaContainer = "1.0.0"
+naharaContainer = "1.2.0"
 ksp = "2.3.7"
 room = "2.8.4"
 

@@ -89,6 +89,7 @@ class DocumentActivity : ComponentActivity() {
             var selectedBrushIcon: String? by remember { mutableStateOf(null) }
             var selectedBrushPreset: BrushType.Preset? by remember { mutableStateOf(null) }
             var showBrushList by remember { mutableStateOf(false) }
+            val activeLayer by documentViewModel.activeLayer.collectAsState()
 
             LaunchedEffect(selectedBrush) {
                 when (val selectedBrush = selectedBrush) {
@@ -119,7 +120,7 @@ class DocumentActivity : ComponentActivity() {
                     factory = { RegularDocumentView(it) }
                 ) {
                     it.document = documentViewModel.document
-                    it.layer = documentViewModel.document.layers.first()
+                    it.layer = activeLayer
                     it.brushPreset = selectedBrushPreset
                     it.brushColor = Color.Black
                     it.canvasTransform = transform
