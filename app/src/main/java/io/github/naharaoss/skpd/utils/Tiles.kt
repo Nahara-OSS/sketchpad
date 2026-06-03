@@ -74,7 +74,6 @@ fun calculateVisibleTiles(
     tileSize: Int,
     z: Int = 0
 ): Set<TileAddress> {
-    val viewport = viewport
     val inverse = Matrix(canvasTransform.values.clone()).apply { invert() }
     val canvasBounds = inverse.map(viewport)
     val result = mutableSetOf<TileAddress>()
