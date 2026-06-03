@@ -46,30 +46,30 @@ fun PerformanceSettingsPage(
             steps = 5
         )
 
-        ListItem(
-            onClick = {},
-            content = { Text("Preload ratio") },
-            supportingContent = { Text("Load ${(preloadRatio * 100f).roundToInt()}% more tiles outside the screen") }
-        )
-        Slider(
-            modifier = Modifier.padding(16.dp, 8.dp),
-            value = preloadRatio,
-            onValueChange = { preloadRatio = it },
-            onValueChangeFinished = { onSettingsChange(settings.copy(preloadRatio = preloadRatio)) },
-            valueRange = 0f..1f
-        )
+//        ListItem(
+//            onClick = {},
+//            content = { Text("Preload ratio") },
+//            supportingContent = { Text("Load ${(preloadRatio * 100f).roundToInt()}% more tiles outside the screen") }
+//        )
+//        Slider(
+//            modifier = Modifier.padding(16.dp, 8.dp),
+//            value = preloadRatio,
+//            onValueChange = { preloadRatio = it },
+//            onValueChangeFinished = { onSettingsChange(settings.copy(preloadRatio = preloadRatio)) },
+//            valueRange = 0f..1f
+//        )
 
-        ListItem(
-            onClick = {},
-            content = { Text("Max undo count") },
-            supportingContent = { Text("Store up to $maxUndoCount undo attempts to sketches") }
-        )
-        Slider(
-            modifier = Modifier.padding(16.dp, 8.dp),
-            value = maxUndoCount.toFloat(),
-            onValueChange = { maxUndoCount = it.roundToInt() },
-            onValueChangeFinished = { onSettingsChange(settings.copy(maxUndoCount = maxUndoCount)) },
-            valueRange = 10f..200f
-        )
+//        ListItem(
+//            onClick = {},
+//            content = { Text("Max undo count") },
+//            supportingContent = { Text("Store up to $maxUndoCount undo attempts to sketches") }
+//        )
+//        Slider(
+//            modifier = Modifier.padding(16.dp, 8.dp),
+//            value = maxUndoCount.toFloat(),
+//            onValueChange = { maxUndoCount = it.roundToInt() },
+//            onValueChangeFinished = { onSettingsChange(settings.copy(maxUndoCount = maxUndoCount)) },
+//            valueRange = 10f..200f
+//        )
     }
 }

@@ -29,20 +29,20 @@ fun MainSettingsPage(
     onNavigate: (SettingsRoute) -> Unit
 ) {
     Column(modifier.verticalScroll(rememberScrollState())) {
-        ListItem(
-            onClick = { onNavigate(SettingsRoute.Appearance) },
-            selected = currentRoute is SettingsRoute.Appearance,
-            leadingContent = { Icon(painterResource(R.drawable.style_24px), null) },
-            content = { Text(stringResource(R.string.settings_category_appearance_title)) },
-            supportingContent = { Text(stringResource(R.string.settings_category_appearance_subtitle)) }
-        )
-        ListItem(
-            onClick = { onNavigate(SettingsRoute.Toolbars) },
-            selected = currentRoute is SettingsRoute.Toolbars,
-            leadingContent = { Icon(painterResource(R.drawable.toolbar_24px), null) },
-            content = { Text(stringResource(R.string.settings_category_toolbars_title)) },
-            supportingContent = { Text(stringResource(R.string.settings_category_toolbars_subtitle)) }
-        )
+//        ListItem(
+//            onClick = { onNavigate(SettingsRoute.Appearance) },
+//            selected = currentRoute is SettingsRoute.Appearance,
+//            leadingContent = { Icon(painterResource(R.drawable.style_24px), null) },
+//            content = { Text(stringResource(R.string.settings_category_appearance_title)) },
+//            supportingContent = { Text(stringResource(R.string.settings_category_appearance_subtitle)) }
+//        )
+//        ListItem(
+//            onClick = { onNavigate(SettingsRoute.Toolbars) },
+//            selected = currentRoute is SettingsRoute.Toolbars,
+//            leadingContent = { Icon(painterResource(R.drawable.toolbar_24px), null) },
+//            content = { Text(stringResource(R.string.settings_category_toolbars_title)) },
+//            supportingContent = { Text(stringResource(R.string.settings_category_toolbars_subtitle)) }
+//        )
         ListItem(
             onClick = { onNavigate(SettingsRoute.Input) },
             selected = currentRoute is SettingsRoute.Input,
