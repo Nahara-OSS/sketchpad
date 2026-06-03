@@ -13,7 +13,6 @@ import java.nio.channels.FileChannel
 import java.nio.file.StandardOpenOption.CREATE
 import java.nio.file.StandardOpenOption.READ
 import java.nio.file.StandardOpenOption.WRITE
-import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Clock
@@ -103,6 +102,21 @@ class LibraryRepository @Inject constructor(
 
     suspend fun deleteItem(item: LibraryItem) {
         val dbItem = dao.getById(item.id)
+
+        when (item) {
+            is LibraryItem.Folder -> {
+                val children = getContent(item)
+                for (item in children) deleteItem(item)
+            }
+
+            is LibraryItem.Document if (dbItem.reference != null) -> {
+                val documentRoot = store.referenceRootOf(dbItem.reference)
+                documentRoot.deleteRecursively()
+            }
+
+            else -> {}
+        }
+
         dao.delete(dbItem)
         _removal.emit(item)
     }
