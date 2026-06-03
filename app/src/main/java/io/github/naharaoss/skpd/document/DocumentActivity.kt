@@ -39,6 +39,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.HorizontalDivider
@@ -79,6 +81,7 @@ import io.github.naharaoss.skpd.resource.BrushResource
 import io.github.naharaoss.skpd.settings.SettingsViewModel
 import io.github.naharaoss.skpd.ui.component.resourceIdFromNamedIcon
 import io.github.naharaoss.skpd.ui.theme.SketchpadTheme
+import io.github.naharaoss.skpd.utils.BlendMode
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -117,6 +120,7 @@ class DocumentActivity : ComponentActivity() {
             var selectedBrushPreset by remember(selectedBrush) { mutableStateOf(selectedBrush?.preset?.replayCache?.lastOrNull()) }
             var selectedBrushIcon by remember(selectedBrush) { mutableStateOf(selectedBrush?.icon?.replayCache?.lastOrNull()) }
             var selectedBrushColor by remember { mutableStateOf(Color.Black) }
+            var selectedBrushBlend by remember { mutableStateOf(BlendMode.SourceOver) }
             val settings by settingsViewModel.settings.collectAsState()
             val windowSizeClass = calculateWindowSizeClass(this)
             var showBrushList by remember { mutableStateOf(false) }
@@ -162,6 +166,7 @@ class DocumentActivity : ComponentActivity() {
                     it.layer = activeLayer
                     it.brushPreset = selectedBrushPreset
                     it.brushColor = selectedBrushColor
+                    it.brushBlend = selectedBrushBlend
                     it.canvasTransform = transform
                     it.fingerDrawing = settings.input.fingerDrawing
 
@@ -233,7 +238,9 @@ class DocumentActivity : ComponentActivity() {
                         }
                     }
 
-                    Box(Modifier.padding(16.dp)) {
+                    Box(Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()) {
                         AnimatedContent(
                             modifier = Modifier.width(if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) 380.dp else 500.dp),
                             targetState = showBrushList,
@@ -248,26 +255,51 @@ class DocumentActivity : ComponentActivity() {
                                     shape = RoundedCornerShape(16.dp),
                                     shadowElevation = 2.dp
                                 ) {
+                                    var showBlendDropdown by remember { mutableStateOf(false) }
+
                                     Column {
                                         Row(
                                             modifier = Modifier.padding(16.dp, 16.dp, 16.dp, 0.dp),
                                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Button(
-                                                onClick = {
-                                                    val intent = Intent(this@DocumentActivity, BrushEditorActivity::class.java)
-                                                    startActivity(intent)
-                                                }
-                                            ) {
+                                            Button({
+                                                val intent = Intent(this@DocumentActivity, BrushEditorActivity::class.java)
+                                                startActivity(intent)
+                                            }) {
                                                 Icon(painterResource(R.drawable.edit_24px), "Edit brushes")
                                                 Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                                                 Text("Edit")
                                             }
+
+                                            Button({ showBlendDropdown = true }) {
+                                                Icon(painterResource(R.drawable.opacity_24px), "Blend mode")
+                                                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                                                Text(selectedBrushBlend.name)
+
+                                                DropdownMenu(
+                                                    expanded = showBlendDropdown,
+                                                    onDismissRequest = { showBlendDropdown = false }
+                                                ) {
+                                                    for (mode in BlendMode.entries) {
+                                                        DropdownMenuItem(
+                                                            leadingIcon = { Icon(painterResource(R.drawable.opacity_24px), "Blend mode") },
+                                                            trailingIcon = { if (selectedBrushBlend == mode) Icon(painterResource(R.drawable.check_24px), "Selected") },
+                                                            text = { Text(mode.name) },
+                                                            onClick = {
+                                                                selectedBrushBlend = mode
+                                                                showBlendDropdown = false
+                                                            }
+                                                        )
+                                                    }
+                                                }
+                                            }
                                         }
 
                                         BrushPicker(
-                                            modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .fillMaxHeight(),
                                             compact = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact,
                                             padding = PaddingValues(16.dp),
                                             brushes = brushes ?: emptyList(),
@@ -284,7 +316,9 @@ class DocumentActivity : ComponentActivity() {
                         }
 
                         AnimatedContent(
-                            modifier = Modifier.width(300.dp).align(Alignment.TopStart),
+                            modifier = Modifier
+                                .width(300.dp)
+                                .align(Alignment.TopStart),
                             targetState = showPalette,
                             transitionSpec = {
                                 val enter = fadeIn() + slideInHorizontally { if (targetState) -it else it }
@@ -317,10 +351,12 @@ class DocumentActivity : ComponentActivity() {
                                                     checked = selectedBrushColor == color,
                                                     onCheckedChange = { if (it) selectedBrushColor = color }
                                                 ) {
-                                                    Box(Modifier.size(24.dp).background(
-                                                        color = color,
-                                                        shape = CircleShape
-                                                    ))
+                                                    Box(Modifier
+                                                        .size(24.dp)
+                                                        .background(
+                                                            color = color,
+                                                            shape = CircleShape
+                                                        ))
                                                 }
                                             }
                                         }
@@ -351,7 +387,9 @@ class DocumentActivity : ComponentActivity() {
                                 ) {
                                     Column {
                                         Row(
-                                            modifier = Modifier.padding(start = 16.dp).fillMaxWidth(),
+                                            modifier = Modifier
+                                                .padding(start = 16.dp)
+                                                .fillMaxWidth(),
                                             horizontalArrangement = Arrangement.SpaceBetween,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
