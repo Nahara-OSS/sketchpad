@@ -414,9 +414,10 @@ fun DeleteDialog(
 @Composable
 fun RenameDialog(
     onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit,
+    onConfirm: suspend (String) -> Unit,
     initialName: String
 ) {
+    val scope = rememberCoroutineScope()
     var newName by remember(initialName) { mutableStateOf(initialName) }
     var renaming by remember { mutableStateOf(false) }
     var lastError by remember { mutableStateOf<Exception?>(null) }
@@ -439,8 +440,20 @@ fun RenameDialog(
                 Text("Cancel")
             }
             TextButton(
-                enabled = !renaming,
-                onClick = {}
+                enabled = newName != initialName && newName.isNotEmpty() && !renaming,
+                onClick = {
+                    scope.launch {
+                        renaming = true
+
+                        try {
+                            onConfirm(newName)
+                        } catch (e: Exception) {
+                            lastError = e
+                        }
+
+                        renaming = false
+                    }
+                }
             ) {
                 Text("Confirm")
             }

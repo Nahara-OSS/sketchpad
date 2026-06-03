@@ -37,6 +37,12 @@ class LibraryFolderViewModel @AssistedInject constructor(
         }
 
         viewModelScope.launch {
+            libraryRepository.update.collect { item ->
+                _content.update { it?.map { if (it.id == item.id) item else it }?.sortedByDescending { it.lastModified } }
+            }
+        }
+
+        viewModelScope.launch {
             libraryRepository.removal.collect { item ->
                 _content.update { it?.filter { entry -> entry.id != item.id } }
             }
@@ -45,6 +51,7 @@ class LibraryFolderViewModel @AssistedInject constructor(
 
     suspend fun createFolder(name: String) = libraryRepository.createFolder(folder, name)
     suspend fun createDocument(name: String, size: Size) = libraryRepository.createDocument(folder, name, size, Color.White)
+    suspend fun renameItem(item: LibraryItem, newName: String) = libraryRepository.renameItem(item, newName)
     suspend fun deleteItem(item: LibraryItem) = libraryRepository.deleteItem(item)
 
     @AssistedFactory

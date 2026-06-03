@@ -10,13 +10,26 @@ sealed interface LibraryItem {
     val creationTime: Instant
     val lastModified: Instant
 
+    fun copyWith(
+        name: String = this.name,
+        lastModified: Instant = this.lastModified
+    ): LibraryItem
+
     @Serializable
     data class Folder(
         override val id: Long,
         override val name: String,
         override val creationTime: Instant,
         override val lastModified: Instant
-    ) : LibraryItem
+    ) : LibraryItem {
+        override fun copyWith(
+            name: String,
+            lastModified: Instant
+        ) = copy(
+            name = name,
+            lastModified = lastModified
+        )
+    }
 
     @Serializable
     data class Document(
@@ -24,7 +37,15 @@ sealed interface LibraryItem {
         override val name: String,
         override val creationTime: Instant,
         override val lastModified: Instant
-    ) : LibraryItem
+    ) : LibraryItem {
+        override fun copyWith(
+            name: String,
+            lastModified: Instant
+        ) = copy(
+            name = name,
+            lastModified = lastModified
+        )
+    }
 
     companion object {
         val Root = Folder(

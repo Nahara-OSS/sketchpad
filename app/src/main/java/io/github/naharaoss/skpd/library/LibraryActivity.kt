@@ -77,20 +77,21 @@ import androidx.navigationevent.NavigationEvent
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.naharaoss.skpd.R
 import io.github.naharaoss.skpd.document.DocumentActivity
-import io.github.naharaoss.skpd.resource.LibraryItem
-import io.github.naharaoss.skpd.settings.SettingsActivity
-import io.github.naharaoss.skpd.settings.SettingsRepository
+import io.github.naharaoss.skpd.library.ui.DeleteDialog
 import io.github.naharaoss.skpd.library.ui.LibraryCard
 import io.github.naharaoss.skpd.library.ui.LibraryCardMetadata
 import io.github.naharaoss.skpd.library.ui.LibraryDocumentPreview
 import io.github.naharaoss.skpd.library.ui.NewDocumentDialog
 import io.github.naharaoss.skpd.library.ui.NewFolderDialog
+import io.github.naharaoss.skpd.library.ui.RenameDialog
+import io.github.naharaoss.skpd.resource.LibraryItem
+import io.github.naharaoss.skpd.settings.SettingsActivity
+import io.github.naharaoss.skpd.settings.SettingsRepository
 import io.github.naharaoss.skpd.ui.component.ElapsedText
 import io.github.naharaoss.skpd.ui.component.TooltipIconButton
 import io.github.naharaoss.skpd.ui.theme.SketchpadTheme
-import javax.inject.Inject
-import io.github.naharaoss.skpd.library.ui.DeleteDialog
 import io.github.naharaoss.skpd.utils.toggle
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class LibraryActivity : ComponentActivity() {
@@ -115,15 +116,12 @@ class LibraryActivity : ComponentActivity() {
             var newFolderDialog by remember { mutableStateOf(false) }
             var newDocumentDialog by remember { mutableStateOf(false) }
             var deleteDialog by remember { mutableStateOf(false) }
+            var renameDialog by remember { mutableStateOf(false) }
             val fadeMotion = tween<Float>(durationMillis = 300, easing = LinearEasing)
             val slideMotion = tween<IntOffset>(300, easing = FastOutSlowInEasing)
 
             BackHandler(fabMenu) {
                 fabMenu = false
-            }
-
-            BackHandler(selectedItems.isNotEmpty()) {
-                selectedItems = emptySet()
             }
 
             SketchpadTheme {
@@ -157,7 +155,10 @@ class LibraryActivity : ComponentActivity() {
                                         TooltipIconButton(
                                             painter = painterResource(R.drawable.arrow_back_24px),
                                             description = "Navigate up",
-                                            onClick = { backStack = backStack.dropLast(1) }
+                                            onClick = {
+                                                if (selectedItems.isNotEmpty()) selectedItems = emptySet()
+                                                else backStack = backStack.dropLast(1)
+                                            }
                                         )
                                     }
                                 }
@@ -236,6 +237,15 @@ class LibraryActivity : ComponentActivity() {
                         ) { show ->
                             when (show) {
                                 true -> FlexibleBottomAppBar {
+                                    TextButton(
+                                        enabled = selectedItems.size == 1,
+                                        onClick = { renameDialog = true }
+                                    ) {
+                                        Icon(painterResource(R.drawable.edit_24px), "Rename")
+                                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                                        Text("Rename")
+                                    }
+
                                     TextButton({ deleteDialog = true }) {
                                         Icon(painterResource(R.drawable.delete_24px), "Delete")
                                         Spacer(Modifier.width(ButtonDefaults.IconSpacing))
@@ -285,6 +295,10 @@ class LibraryActivity : ComponentActivity() {
                                 val folderViewModel = hiltViewModel(creationCallback = { factory: LibraryFolderViewModel.Factory -> factory.create(key) })
                                 val content by folderViewModel.content.collectAsState()
 
+                                BackHandler(selectedItems.isNotEmpty()) {
+                                    selectedItems = emptySet()
+                                }
+
                                 AnimatedContent(
                                     modifier = Modifier
                                         .fillMaxSize()
@@ -324,6 +338,7 @@ class LibraryActivity : ComponentActivity() {
                                             ) {
                                                 items(folders, key = { it.id }) { folder ->
                                                     LibraryCard(
+                                                        modifier = Modifier.animateItem(),
                                                         selected = selectedItems.contains(folder),
                                                         metadata = {
                                                             LibraryCardMetadata(
@@ -352,6 +367,7 @@ class LibraryActivity : ComponentActivity() {
 
                                                 items(documents, key = { it.id }) { document ->
                                                     LibraryCard(
+                                                        modifier = Modifier.animateItem(),
                                                         selected = selectedItems.contains(document),
                                                         preview = { LibraryDocumentPreview() },
                                                         metadata = {
@@ -421,6 +437,18 @@ class LibraryActivity : ComponentActivity() {
                                                     else -> "Deleted ${items.size} items"
                                                 }
                                             )
+                                        }
+                                    )
+                                }
+
+                                if (renameDialog) {
+                                    RenameDialog(
+                                        initialName = selectedItems.first().name,
+                                        onDismiss = { renameDialog = false },
+                                        onConfirm = {
+                                            folderViewModel.renameItem(selectedItems.first(), it)
+                                            renameDialog = false
+                                            selectedItems = emptySet()
                                         }
                                     )
                                 }

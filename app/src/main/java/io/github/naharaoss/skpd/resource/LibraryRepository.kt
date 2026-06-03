@@ -24,8 +24,10 @@ class LibraryRepository @Inject constructor(
 ) {
     private val _addition = MutableSharedFlow<LibraryItem>()
     private val _removal = MutableSharedFlow<LibraryItem>()
+    private val _update = MutableSharedFlow<LibraryItem>()
     val addition = _addition.asSharedFlow()
     val removal = _removal.asSharedFlow()
+    val update = _update.asSharedFlow()
 
     suspend fun getContent(folder: LibraryItem.Folder) = (if (folder != LibraryItem.Root) dao.getChildrenByParentId(folder.id) else dao.getRoot())
         .map {
@@ -97,6 +99,15 @@ class LibraryRepository @Inject constructor(
             lastModified = now
         )
         _addition.emit(item)
+        return item
+    }
+
+    suspend fun renameItem(item: LibraryItem, newName: String): LibraryItem {
+        val now = Clock.System.now()
+        val dbItem = dao.getById(item.id)
+        dao.update(dbItem.copy(name = newName, lastModified = now))
+        val item = item.copyWith(name = newName, lastModified = now)
+        _update.emit(item)
         return item
     }
 
