@@ -418,7 +418,7 @@ fun RenameDialog(
     initialName: String
 ) {
     val scope = rememberCoroutineScope()
-    var newName by remember(initialName) { mutableStateOf(initialName) }
+    var newName by rememberSaveable(initialName) { mutableStateOf(initialName) }
     var renaming by remember { mutableStateOf(false) }
     var lastError by remember { mutableStateOf<Exception?>(null) }
     val focusRequester = remember { FocusRequester() }

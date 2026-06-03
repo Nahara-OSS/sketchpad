@@ -46,8 +46,6 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleFloatingActionButton
@@ -56,6 +54,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -109,14 +108,13 @@ class LibraryActivity : ComponentActivity() {
 
         setContent {
             val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-            val snackBar = remember { SnackbarHostState() }
             var backStack by rememberSerializable { mutableStateOf(listOf(LibraryItem.Root)) }
             var selectedItems by rememberSerializable { mutableStateOf(emptySet<LibraryItem>()) }
             var fabMenu by remember { mutableStateOf(false) }
-            var newFolderDialog by remember { mutableStateOf(false) }
-            var newDocumentDialog by remember { mutableStateOf(false) }
-            var deleteDialog by remember { mutableStateOf(false) }
-            var renameDialog by remember { mutableStateOf(false) }
+            var newFolderDialog by rememberSaveable { mutableStateOf(false) }
+            var newDocumentDialog by rememberSaveable { mutableStateOf(false) }
+            var deleteDialog by rememberSaveable { mutableStateOf(false) }
+            var renameDialog by rememberSaveable { mutableStateOf(false) }
             val fadeMotion = tween<Float>(durationMillis = 300, easing = LinearEasing)
             val slideMotion = tween<IntOffset>(300, easing = FastOutSlowInEasing)
 
@@ -256,9 +254,6 @@ class LibraryActivity : ComponentActivity() {
                                 false -> Spacer(Modifier.fillMaxWidth())
                             }
                         }
-                    },
-                    snackbarHost = {
-                        SnackbarHost(hostState = snackBar)
                     }
                 ) { innerPadding ->
                     NavDisplay(
@@ -430,13 +425,6 @@ class LibraryActivity : ComponentActivity() {
                                             for (item in items) folderViewModel.deleteItem(item)
                                             selectedItems = emptySet()
                                             deleteDialog = false
-
-                                            snackBar.showSnackbar(
-                                                message = when {
-                                                    items.size == 1 -> "Deleted ${items.first().name}"
-                                                    else -> "Deleted ${items.size} items"
-                                                }
-                                            )
                                         }
                                     )
                                 }
