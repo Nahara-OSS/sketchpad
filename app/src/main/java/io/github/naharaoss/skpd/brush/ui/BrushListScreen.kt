@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.ExperimentalFlexBoxApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.LoadingIndicator
@@ -38,7 +39,7 @@ import io.github.naharaoss.skpd.ui.component.TooltipIconButton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalFlexBoxApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalFlexBoxApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun BrushListScreen(
     modifier: Modifier = Modifier,
