@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEvent
@@ -88,7 +89,6 @@ class BrushEditorActivity : ComponentActivity() {
         setContent {
             val settings by settingsViewModel.settings.collectAsState()
             val windowSizeClass = calculateWindowSizeClass(this)
-            val brushes by brushListViewModel.brushes.collectAsState()
             var backStack by rememberSerializable { mutableStateOf(listOf<BrushEditorRoute>(BrushEditorRoute.BrushList)) }
 
             fun goBack() {
@@ -102,18 +102,22 @@ class BrushEditorActivity : ComponentActivity() {
                 entry<BrushEditorRoute.BrushList>(metadata = mapOf(BrushListMetadata)) {
                     BrushListScreen(
                         modifier = Modifier.fillMaxSize(),
-                        viewModel = brushListViewModel,
+                        listViewModel = brushListViewModel,
                         windowSizeClass = windowSizeClass,
                         onBack = { goBack() },
-                        onBrushSelect = { backStack = backStack + BrushEditorRoute.Brush(it.id) }
+                        onBrushSelect = { backStack = backStack + BrushEditorRoute.Brush(it) }
                     )
                 }
 
                 entry<BrushEditorRoute.Brush>(metadata = mapOf(BrushMetadata)) { key ->
+                    val presetViewModel = hiltViewModel(
+                        key = "BrushItem(${key.brush.id})",
+                        creationCallback = { factory: BrushPresetViewModel.Factory -> factory.create(key.brush) }
+                    )
+
                     BrushEditScreen(
                         modifier = Modifier.fillMaxSize(),
-                        viewModel = brushListViewModel,
-                        brushId = key.brushId,
+                        presetViewModel = presetViewModel,
                         onBack = { goBack() },
                         onDynamicEditor = { id, parameter ->
                             val existingIndex = backStack.indexOfFirst { it is BrushEditorRoute.Dynamic }
@@ -127,10 +131,14 @@ class BrushEditorActivity : ComponentActivity() {
                 }
 
                 entry<BrushEditorRoute.Dynamic>(metadata = mapOf(DynamicMetadata)) { key ->
+                    val presetViewModel = hiltViewModel(
+                        key = "BrushItem(${key.brush.id})",
+                        creationCallback = { factory: BrushPresetViewModel.Factory -> factory.create(key.brush) }
+                    )
+
                     DynamicEditScreen(
                         modifier = Modifier.fillMaxSize(),
-                        viewModel = brushListViewModel,
-                        brushId = key.brushId,
+                        presetViewModel = presetViewModel,
                         parameter = key.parameter,
                         onBack = { goBack() }
                     )
@@ -175,20 +183,22 @@ class BrushEditorActivity : ComponentActivity() {
                     val testAreaPadding = TopAppBarDefaults.windowInsets
                         .exclude(TopAppBarDefaults.windowInsets.only(WindowInsetsSides.Start))
                         .asPaddingValues()
-                    var preset: BrushType.Preset? by remember { mutableStateOf(null) }
-                    val presetFlow = backStack
-                        .find { it is BrushEditorRoute.Brush }
-                        ?.let { route ->
-                            brushes
-                                ?.find { it.id == (route as BrushEditorRoute.Brush).brushId }
-                                ?.preset
-                        }
+                    val selectedBrush = backStack.filterIsInstance<BrushEditorRoute.Brush>().firstOrNull()?.brush
+                    var preset by remember(selectedBrush) { mutableStateOf<BrushType.Preset?>(null) }
 
-                    LaunchedEffect(presetFlow) {
-                        if (presetFlow != null) {
-                            presetFlow.collect { preset = it }
-                        } else {
-                            preset = null
+                    val presetViewModel = if (selectedBrush != null) {
+                        hiltViewModel(
+                            key = "BrushItem(${selectedBrush.id})",
+                            creationCallback = { factory: BrushPresetViewModel.Factory -> factory.create(selectedBrush) }
+                        )
+                    } else {
+                        null
+                    }
+
+                    LaunchedEffect(presetViewModel) {
+                        when (presetViewModel) {
+                            null -> preset = null
+                            else -> presetViewModel.preset.collect { p -> preset = p }
                         }
                     }
 

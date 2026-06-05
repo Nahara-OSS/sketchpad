@@ -4,18 +4,6 @@ import io.github.naharaoss.skpd.brush.BrushType
 import io.github.naharaoss.skpd.brush.Dynamic
 import io.github.naharaoss.skpd.brush.impl.StampBrush
 import io.github.naharaoss.skpd.utils.Graph
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -23,64 +11,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import kotlinx.serialization.json.encodeToStream
 import java.io.File
-import java.util.concurrent.atomic.AtomicBoolean
-
-@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-abstract class BrushResource(
-    scope: CoroutineScope,
-    private val store: ResourceContentStore,
-    val id: Long,
-    private val reference: String,
-    name: String,
-    icon: String?
-) {
-    private val _name = MutableStateFlow(name)
-    private val _icon = MutableStateFlow(icon)
-    private val _preset = MutableSharedFlow<BrushType.Preset>(replay = 1)
-    private val isActive = AtomicBoolean(false)
-    val name = _name.asStateFlow()
-    val icon = _icon.asStateFlow()
-    val preset = _preset.asSharedFlow()
-
-    protected abstract suspend fun onMetadataUpdate(name: String, icon: String?)
-    protected abstract suspend fun onDelete()
-
-    init {
-        scope.launch {
-            _preset.subscriptionCount
-                .map { it > 0 }
-                .distinctUntilChanged()
-                .collect { hasSubscribers ->
-                    if (hasSubscribers && this@BrushResource.isActive.compareAndSet(false, true)) {
-                        val brushFile = store.referenceRootOf(reference)
-                        val preset = withContext(Dispatchers.IO) { brushFile.loadBrushPreset() }
-                        _preset.emit(preset)
-                    } else if (!hasSubscribers && this@BrushResource.isActive.compareAndSet(true, false)) {
-                        _preset.resetReplayCache()
-                    }
-                }
-        }
-    }
-
-    suspend fun changeMetadata(name: String, icon: String?) {
-        if (_name.value != name) _name.value = name
-        if (_icon.value != icon) _icon.value = icon
-        onMetadataUpdate(name, icon)
-    }
-
-    suspend fun store(preset: BrushType.Preset) {
-        val brushFile = store.referenceRootOf(reference)
-        withContext(Dispatchers.IO) { brushFile.storeBrushPreset(preset) }
-        if (_preset.subscriptionCount.value > 0) _preset.emit(preset)
-    }
-
-    suspend fun delete() {
-        val brushFile = store.referenceRootOf(reference)
-        withContext(Dispatchers.IO) { brushFile.deleteRecursively() }
-        _preset.resetReplayCache()
-        onDelete()
-    }
-}
 
 @Serializable
 private sealed interface SerializablePreset {
@@ -119,7 +49,7 @@ private sealed interface SerializablePreset {
 }
 
 @OptIn(ExperimentalSerializationApi::class)
-private fun File.loadBrushPreset(): BrushType.Preset {
+fun File.loadBrushPresetFromFolder(): BrushType.Preset {
     val presetFile = File(this, SerializablePreset.PRESET_FILE_NAME)
     val base: SerializablePreset = presetFile.inputStream().use { Json.decodeFromStream(it) }
 
@@ -129,7 +59,7 @@ private fun File.loadBrushPreset(): BrushType.Preset {
 }
 
 @OptIn(ExperimentalSerializationApi::class)
-private fun File.storeBrushPreset(preset: BrushType.Preset) {
+fun File.storeBrushPresetToFolder(preset: BrushType.Preset) {
     val base: SerializablePreset = when (preset) {
         is StampBrush.Preset -> storeStampBrushPreset(preset)
         else -> throw Exception("Not implemented for $preset")

@@ -20,6 +20,7 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.scene.Scene
 import androidx.navigation3.scene.SceneStrategy
 import androidx.navigation3.scene.SceneStrategyScope
+import io.github.naharaoss.skpd.resource.BrushItem
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -28,10 +29,10 @@ sealed interface BrushEditorRoute {
     object BrushList : BrushEditorRoute
 
     @Serializable
-    data class Brush(val brushId: Long) : BrushEditorRoute
+    data class Brush(val brush: BrushItem) : BrushEditorRoute
 
     @Serializable
-    data class Dynamic(val brushId: Long, val parameter: String) : BrushEditorRoute
+    data class Dynamic(val brush: BrushItem, val parameter: String) : BrushEditorRoute
 }
 
 val BrushListMetadata = "type" to "BrushList"

@@ -122,7 +122,7 @@ class LibraryRepository @Inject constructor(
 
             is LibraryItem.Document if (dbItem.reference != null) -> {
                 val documentRoot = store.referenceRootOf(dbItem.reference)
-                documentRoot.deleteRecursively()
+                withContext(Dispatchers.IO) { documentRoot.deleteRecursively() }
             }
 
             else -> {}

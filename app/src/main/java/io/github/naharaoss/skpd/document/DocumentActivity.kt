@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -70,19 +69,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.naharaoss.skpd.R
 import io.github.naharaoss.skpd.brush.BrushEditorActivity
 import io.github.naharaoss.skpd.brush.BrushListViewModel
+import io.github.naharaoss.skpd.brush.BrushPresetViewModel
 import io.github.naharaoss.skpd.brush.ui.BrushPicker
 import io.github.naharaoss.skpd.document.ui.DocumentViewInterface
 import io.github.naharaoss.skpd.document.ui.RegularDocumentView
-import io.github.naharaoss.skpd.resource.BrushResource
 import io.github.naharaoss.skpd.settings.SettingsViewModel
 import io.github.naharaoss.skpd.ui.component.resourceIdFromNamedIcon
 import io.github.naharaoss.skpd.ui.theme.SketchpadTheme
 import io.github.naharaoss.skpd.utils.BlendMode
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.math.roundToInt
 
 /**
@@ -116,9 +116,9 @@ class DocumentActivity : ComponentActivity() {
             val activeLayer by documentViewModel.activeLayer.collectAsState()
             var transform by remember { mutableStateOf(Matrix()) }
             val brushes by brushListViewModel.brushes.collectAsState()
-            var selectedBrush by remember { mutableStateOf<BrushResource?>(null) }
-            var selectedBrushPreset by remember(selectedBrush) { mutableStateOf(selectedBrush?.preset?.replayCache?.lastOrNull()) }
-            var selectedBrushIcon by remember(selectedBrush) { mutableStateOf(selectedBrush?.icon?.replayCache?.lastOrNull()) }
+            var selectedBrush by remember(brushes != null) { mutableStateOf(brushes?.firstOrNull()) }
+            val presetViewModel = selectedBrush?.let { hiltViewModel(key = "BrushItem{${it.id}}", creationCallback = { factory: BrushPresetViewModel.Factory -> factory.create(it) }) }
+            val selectedBrushPreset by (presetViewModel?.preset ?: MutableStateFlow(null)).collectAsStateWithLifecycle()
             var selectedBrushColor by remember { mutableStateOf(Color.Black) }
             var selectedBrushBlend by remember { mutableStateOf(BlendMode.SourceOver) }
             val settings by settingsViewModel.settings.collectAsState()
@@ -127,26 +127,6 @@ class DocumentActivity : ComponentActivity() {
             var showLayerList by remember { mutableStateOf(false) }
             var showPalette by remember { mutableStateOf(false) }
             var view by remember { mutableStateOf<DocumentViewInterface?>(null) }
-
-            LaunchedEffect(brushes != null) {
-                if (selectedBrush == null) {
-                    brushes?.let { selectedBrush = it.firstOrNull() }
-                }
-            }
-
-            LaunchedEffect(selectedBrush) {
-                when (val selectedBrush = selectedBrush) {
-                    null -> {
-                        selectedBrushPreset = null
-                        selectedBrushIcon = null
-                    }
-
-                    else -> {
-                        launch { selectedBrush.preset.collect { selectedBrushPreset = it } }
-                        launch { selectedBrush.icon.collect { selectedBrushIcon = it } }
-                    }
-                }
-            }
 
             LaunchedEffect(documentViewModel.changed) {
                 documentViewModel.changed.collect { view?.triggerDocumentUpdate() }
@@ -198,10 +178,8 @@ class DocumentActivity : ComponentActivity() {
                                     showLayerList = false
                                 }
                             ) {
-                                val selectedBrushIcon = selectedBrushIcon
-
                                 Icon(
-                                    painter = painterResource(if (selectedBrushIcon != null) resourceIdFromNamedIcon(selectedBrushIcon) else R.drawable.question_mark_24px),
+                                    painter = painterResource(resourceIdFromNamedIcon(selectedBrush?.icon ?: "")),
                                     contentDescription = "Brush"
                                 )
                             }
@@ -297,12 +275,11 @@ class DocumentActivity : ComponentActivity() {
                                         }
 
                                         BrushPicker(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .fillMaxHeight(),
+                                            modifier = Modifier.fillMaxSize(),
+                                            listViewModel = brushListViewModel,
+                                            selected = selectedBrush,
                                             compact = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact,
                                             padding = PaddingValues(16.dp),
-                                            brushes = brushes ?: emptyList(),
                                             onBrushSelect = {
                                                 selectedBrush = it
                                                 showBrushList = false

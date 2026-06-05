@@ -45,7 +45,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.naharaoss.skpd.R
-import io.github.naharaoss.skpd.brush.BrushListViewModel
+import io.github.naharaoss.skpd.brush.BrushPresetViewModel
 import io.github.naharaoss.skpd.brush.Dynamic
 import io.github.naharaoss.skpd.brush.Sensor
 import io.github.naharaoss.skpd.ui.component.TooltipIconButton
@@ -55,31 +55,29 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun DynamicEditScreen(
     modifier: Modifier = Modifier,
-    viewModel: BrushListViewModel,
-    brushId: Long,
+    presetViewModel: BrushPresetViewModel,
     parameter: String,
     onBack: () -> Unit
 ) {
-    val brushes by viewModel.brushes.collectAsState()
-    val brush = brushes?.find { it.id == brushId }
-    val presetState = brush?.preset?.collectAsState(brush.preset.replayCache.lastOrNull())
+    val preset by presetViewModel.preset.collectAsState()
 
     AnimatedContent(
         modifier = modifier,
-        targetState = presetState,
+        targetState = preset,
         contentKey = { it != null }
-    ) { presetState ->
+    ) { preset ->
         when {
-            presetState == null || presetState.value == null -> {
+            preset == null -> {
                 var showIndicator by remember { mutableStateOf(false) }
 
                 LaunchedEffect(Unit) {
-                    delay(200)
+                    delay(200.milliseconds)
                     showIndicator = true
                 }
 
@@ -100,10 +98,9 @@ fun DynamicEditScreen(
 
             else -> {
                 val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-                val preset by presetState
-                val parameter = preset!!.type.allParameters.find { it.parameter == parameter }!!
+                val parameter = preset.type.allParameters.find { it.parameter == parameter }!!
                 val parameterName = stringResource(parameter.nameRes)
-                var decoupledPreset by remember(preset) { mutableStateOf(preset!!) }
+                var decoupledPreset by remember(preset) { mutableStateOf(preset) }
                 val dynamic = parameter.getDynamicTypeErased(decoupledPreset)
                 val scope = rememberCoroutineScope()
 
@@ -145,7 +142,7 @@ fun DynamicEditScreen(
                                 },
                                 onValueChange = { decoupledPreset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic.copy(base = it)) },
                                 onValueChangeFinished = {
-                                    scope.launch { brush?.store(decoupledPreset) }
+                                    scope.launch { presetViewModel.changePreset(decoupledPreset) }
                                 }
                             )
                         }
@@ -213,7 +210,7 @@ fun DynamicEditScreen(
                                                             val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
                                                             decoupledPreset = preset
                                                             sensorDropdown = false
-                                                            scope.launch { brush?.store(preset) }
+                                                            scope.launch { presetViewModel.changePreset(decoupledPreset) }
                                                         }
                                                     )
                                                 }
@@ -243,7 +240,7 @@ fun DynamicEditScreen(
                                                         val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
                                                         decoupledPreset = preset
                                                         sensorDropdown = false
-                                                        scope.launch { brush?.store(preset) }
+                                                        scope.launch { presetViewModel.changePreset(decoupledPreset) }
                                                     }
                                                 )
                                             }
@@ -265,7 +262,7 @@ fun DynamicEditScreen(
                                                         val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
                                                         decoupledPreset = preset
                                                         sensorDropdown = false
-                                                        scope.launch { brush?.store(preset) }
+                                                        scope.launch { presetViewModel.changePreset(decoupledPreset) }
                                                     }
                                                 )
                                             }
@@ -312,7 +309,7 @@ fun DynamicEditScreen(
                                                             val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
                                                             decoupledPreset = preset
                                                             operationDropdown = false
-                                                            scope.launch { brush?.store(preset) }
+                                                            scope.launch { presetViewModel.changePreset(decoupledPreset) }
                                                         }
                                                     )
                                                 }
@@ -350,7 +347,7 @@ fun DynamicEditScreen(
                                                         val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
                                                         val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
                                                         decoupledPreset = preset
-                                                        scope.launch { brush?.store(preset) }
+                                                        scope.launch { presetViewModel.changePreset(decoupledPreset) }
                                                     }
                                                 )
                                             }
@@ -372,7 +369,7 @@ fun DynamicEditScreen(
                                                         val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
                                                         val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
                                                         decoupledPreset = preset
-                                                        scope.launch { brush?.store(preset) }
+                                                        scope.launch { presetViewModel.changePreset(decoupledPreset) }
                                                     }
                                                 )
                                             }
@@ -384,7 +381,7 @@ fun DynamicEditScreen(
                                             val dynamic = dynamic.copy(modifiers = dynamic.modifiers.filter { it.id != modifier.id })
                                             val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
                                             decoupledPreset = preset
-                                            scope.launch { brush?.store(preset) }
+                                            scope.launch { presetViewModel.changePreset(decoupledPreset) }
                                         },
                                         colors = ListItemDefaults.colors(contentColor = MaterialTheme.colorScheme.error),
                                         content = { Text("Delete modifier") },
@@ -402,7 +399,7 @@ fun DynamicEditScreen(
                                             val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
                                             decoupledPreset = preset
                                             decoupledGraph = it
-                                            scope.launch { brush?.store(preset) }
+                                            scope.launch { presetViewModel.changePreset(decoupledPreset) }
                                         },
                                         xAxisLabel = { Text(sensorName) },
                                         yAxisLabel = { Text(parameterName) }
@@ -428,7 +425,7 @@ fun DynamicEditScreen(
                                     val dynamic = dynamic.copy(modifiers = dynamic.modifiers + modifier)
                                     val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
                                     decoupledPreset = preset
-                                    scope.launch { brush?.store(preset) }
+                                    scope.launch { presetViewModel.changePreset(decoupledPreset) }
                                 }
                             )
                         }

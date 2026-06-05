@@ -119,6 +119,9 @@ abstract class AppDatabase : RoomDatabase() {
         @Query("SELECT * FROM brush WHERE name LIKE '%' || :keyword || '%'")
         suspend fun searchAll(keyword: String): List<Brush>
 
+        @Query("SELECT * FROM brush WHERE brushId = :brushId")
+        suspend fun getById(brushId: Long): Brush
+
         @Query("""
             SELECT brush.brushId, brush.name, brush.icon, brush.reference FROM brush
             INNER JOIN brushTag ON brush.brushId = brushTag.brushId
