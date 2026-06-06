@@ -2,6 +2,7 @@ package io.github.naharaoss.skpd.document
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.Surface
 import android.view.WindowInsets
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -65,6 +66,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Matrix
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -82,6 +84,7 @@ import io.github.naharaoss.skpd.settings.SettingsViewModel
 import io.github.naharaoss.skpd.ui.component.resourceIdFromNamedIcon
 import io.github.naharaoss.skpd.ui.theme.SketchpadTheme
 import io.github.naharaoss.skpd.utils.BlendMode
+import io.github.naharaoss.skpd.utils.Matrix4
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.math.roundToInt
 
@@ -94,9 +97,7 @@ class DocumentActivity : ComponentActivity() {
     private val settingsViewModel: SettingsViewModel by viewModels()
     private val brushListViewModel: BrushListViewModel by viewModels()
 
-    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class,
-        ExperimentalMaterial3ExpressiveApi::class, ExperimentalGridApi::class
-    )
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalGridApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -114,7 +115,7 @@ class DocumentActivity : ComponentActivity() {
             val document by documentViewModel.document.collectAsState()
             val layers by documentViewModel.layers.collectAsState()
             val activeLayer by documentViewModel.activeLayer.collectAsState()
-            var transform by remember { mutableStateOf(Matrix()) }
+            var canvasTransform by remember { mutableStateOf(Matrix()) }
             val brushes by brushListViewModel.brushes.collectAsState()
             var selectedBrush by remember(brushes != null) { mutableStateOf(brushes?.firstOrNull()) }
             val presetViewModel = selectedBrush?.let { hiltViewModel(key = "BrushItem{${it.id}}", creationCallback = { factory: BrushPresetViewModel.Factory -> factory.create(it) }) }
@@ -127,6 +128,18 @@ class DocumentActivity : ComponentActivity() {
             var showLayerList by remember { mutableStateOf(false) }
             var showPalette by remember { mutableStateOf(false) }
             var view by remember { mutableStateOf<DocumentViewInterface?>(null) }
+
+            val displayTransform = when (LocalView.current.display.rotation) {
+                Surface.ROTATION_90 -> Matrix4.Rotate90
+                Surface.ROTATION_180 -> Matrix4.Rotate180
+                Surface.ROTATION_270 -> Matrix4.Rotate270
+                else -> Matrix4.Identity
+            }
+
+            val combinedTransform = Matrix().also {
+                it *= canvasTransform
+                it *= displayTransform.invert().asAndroidx()
+            }
 
             LaunchedEffect(documentViewModel.changed) {
                 documentViewModel.changed.collect { view?.triggerDocumentUpdate() }
@@ -147,13 +160,14 @@ class DocumentActivity : ComponentActivity() {
                     it.brushPreset = selectedBrushPreset
                     it.brushColor = selectedBrushColor
                     it.brushBlend = selectedBrushBlend
-                    it.canvasTransform = transform
+                    it.canvasTransform = combinedTransform
                     it.fingerDrawing = settings.input.fingerDrawing
 
                     it.onTransformGesture = { matrix ->
-                        val newTransform = Matrix(transform.values.clone())
-                        newTransform *= matrix
-                        transform = newTransform
+                        val matrix = displayTransform.transpose() * Matrix4.fromAndroidx(matrix) * displayTransform
+                        val newTransform = Matrix(canvasTransform.values.clone())
+                        newTransform *= matrix.asAndroidx()
+                        canvasTransform = newTransform
                     }
                 }
 

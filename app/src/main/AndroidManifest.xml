@@ -32,7 +32,7 @@
             android:name=".document.DocumentActivity"
             android:exported="true"
             android:label="@string/title_document"
-            android:rotationAnimation="jumpcut"
+            android:rotationAnimation="seamless"
             android:theme="@style/Theme.Sketchpad.Document" />
         <activity
             android:name=".brush.BrushEditorActivity"
