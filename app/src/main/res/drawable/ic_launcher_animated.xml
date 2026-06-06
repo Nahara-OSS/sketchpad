@@ -1,0 +1,806 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:drawable="@drawable/ic_launcher_foreground">
+    <target android:name="pencilBody">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="800"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+    <target android:name="pencilHead">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="600"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="600"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="tabletFrame1">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:startOffset="0"
+                android:duration="800"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+    <target android:name="tabletFrame2">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="450"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="450"
+                    android:duration="350"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="tabletFrame3">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="450"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="450"
+                    android:duration="350"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="tabletFrame4">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="550"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="550"
+                    android:duration="250"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="tabletFrame5">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="450"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="450"
+                    android:duration="350"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="tabletFrame6">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="600"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="600"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="tabletFrame7">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="600"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="600"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="tabletScreen1">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="200"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="200"
+                    android:duration="800"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="tabletScreen2">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="650"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="650"
+                    android:duration="350"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="tabletScreen3">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="650"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="650"
+                    android:duration="350"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="tabletScreen4">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="650"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="650"
+                    android:duration="350"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:animation="@animator/hair_path" android:name="hair1" />
+    <target android:animation="@animator/hair_path" android:name="hair2" />
+    <target android:animation="@animator/hair_path" android:name="hair3" />
+    <target android:animation="@animator/hair_path" android:name="hair4" />
+    <target android:animation="@animator/hair_path" android:name="hair5" />
+    <target android:animation="@animator/hair_path" android:name="hair6" />
+    <target android:name="hair7">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:startOffset="0"
+                android:duration="300"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+    <target android:animation="@animator/hair_path" android:name="hair8" />
+    <target android:name="hair9">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="400"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:animation="@animator/hair_path" android:name="hair10" />
+    <target android:name="hair11">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:startOffset="0"
+                android:duration="400"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+    <target android:name="hair12">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:startOffset="0"
+                android:duration="400"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+    <target android:name="hair13">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:startOffset="0"
+                android:duration="400"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+    <target android:name="hair14">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:startOffset="0"
+                android:duration="400"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+    <target android:name="hair15">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="400"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:animation="@animator/hair_path" android:name="hair16" />
+    <target android:name="hair17">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="400"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="hair18">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="400"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="hair19">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="400"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="jawline1">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:startOffset="0"
+                android:duration="600"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+    <target android:name="jawline2">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:startOffset="0"
+                android:duration="600"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+    <target android:name="neck1">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:startOffset="0"
+                android:duration="600"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+    <target android:name="neck2">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="300"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="300"
+                    android:duration="300"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="neck3">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="400"
+                    android:duration="300"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="mouth">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="400"
+                    android:duration="100"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="flower">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="200"
+                    android:propertyName="fillAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="200"
+                    android:duration="400"
+                    android:propertyName="fillAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:animation="@animator/petal_path" android:name="petal1" />
+    <target android:animation="@animator/petal_path" android:name="petal2" />
+    <target android:animation="@animator/petal_path" android:name="petal3" />
+    <target android:animation="@animator/petal_path" android:name="petal4" />
+    <target android:animation="@animator/petal_path" android:name="petal5" />
+    <target android:animation="@animator/petal_path" android:name="petal6" />
+    <target android:animation="@animator/petal_path" android:name="petal7" />
+    <target android:animation="@animator/petal_path" android:name="petal8" />
+    <target android:animation="@animator/petal_path" android:name="petal9" />
+    <target android:animation="@animator/petal_path" android:name="petal10" />
+    <target android:name="iris1">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="200"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="200"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="iris2">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="200"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="200"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="iris3">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="200"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="200"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="iris4">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="200"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="200"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="iris5">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="200"
+                    android:propertyName="fillAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="200"
+                    android:duration="400"
+                    android:propertyName="fillAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="iris6">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="200"
+                    android:propertyName="fillAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="200"
+                    android:duration="400"
+                    android:propertyName="fillAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="hairpin1">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="200"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="200"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="hairpin2">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="400"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="hairpin3">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="200"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="200"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="hairpin4">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="400"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="hairpin5">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="200"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="200"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="hairpin6">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="400"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="hairpin7">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="200"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="200"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="hairpin8">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:startOffset="0"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0" />
+                <objectAnimator
+                    android:startOffset="400"
+                    android:duration="400"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="eyelashLeft">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:startOffset="0"
+                android:duration="400"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+    <target android:name="eyebrowLeft">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:startOffset="0"
+                android:duration="400"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+    <target android:name="eyelashRight">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:startOffset="0"
+                android:duration="400"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+    <target android:name="eyeLeft1">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:startOffset="0"
+                android:duration="400"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+    <target android:name="eyeLeft2">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:startOffset="0"
+                android:duration="400"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+    <target android:name="eyeRight1">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:startOffset="0"
+                android:duration="400"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+    <target android:name="eyeRight2">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:startOffset="0"
+                android:duration="400"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+</animated-vector>

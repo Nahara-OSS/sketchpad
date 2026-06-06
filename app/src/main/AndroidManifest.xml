@@ -21,7 +21,7 @@
         <activity
             android:name=".library.LibraryActivity"
             android:exported="true"
-            android:theme="@style/Theme.Sketchpad">
+            android:theme="@style/Theme.Sketchpad.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

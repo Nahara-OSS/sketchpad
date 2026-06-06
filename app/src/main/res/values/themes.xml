@@ -6,4 +6,13 @@
     <style name="Theme.Sketchpad.Document" parent="Theme.Sketchpad">
         <item name="android:windowFullscreen">true</item>
     </style>
+    
+    <style name="Theme.Sketchpad.Starting" parent="Theme.SplashScreen">
+        <item name="android:windowSplashScreenBackground">@color/white</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_animated</item>
+        <item name="android:windowSplashScreenAnimationDuration">1000</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/white</item>
+        <item name="android:windowSplashScreenBrandingImage">@drawable/sketchpad_branding</item>
+        <item name="postSplashScreenTheme">@style/Theme.Sketchpad</item>
+    </style>
 </resources>
