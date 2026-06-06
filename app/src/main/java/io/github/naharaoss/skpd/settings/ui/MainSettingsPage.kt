@@ -3,6 +3,7 @@ package io.github.naharaoss.skpd.settings.ui
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -94,6 +95,12 @@ private fun VersionFooter(modifier: Modifier = Modifier) {
         ) {
             Text(stringResource(R.string.app_name_full))
             Text(stringResource(R.string.settings_about_version_subtitle).format(version, git))
+
+            Icon(
+                modifier = Modifier.size(200.dp),
+                painter = painterResource(R.drawable.ic_launcher_monochrome),
+                contentDescription = stringResource(R.string.app_name_full)
+            )
         }
     }
 }
