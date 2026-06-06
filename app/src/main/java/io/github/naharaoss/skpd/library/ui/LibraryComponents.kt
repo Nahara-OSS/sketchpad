@@ -1,6 +1,10 @@
 package io.github.naharaoss.skpd.library.ui
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.combinedClickable
@@ -11,10 +15,13 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
@@ -39,6 +46,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
@@ -63,6 +71,14 @@ fun LibraryCard(
     onClick: () -> Unit = {},
     onLongClick: (() -> Unit)? = null
 ) {
+    val shadowElevation by animateDpAsState(
+        targetValue = when {
+            !enabled -> 0.dp
+            selected -> 2.dp
+            else -> 0.dp
+        }
+    )
+
     Surface(
         modifier = modifier.alpha(if (enabled) 1f else 0.5f),
         shape = CardDefaults.shape,
@@ -74,11 +90,7 @@ fun LibraryCard(
             selected -> 8.dp
             else -> 1.dp
         },
-        shadowElevation = when {
-            !enabled -> 0.dp
-            selected -> 2.dp
-            else -> 0.dp
-        }
+        shadowElevation = shadowElevation
     ) {
         Column(
             modifier = Modifier
@@ -99,7 +111,7 @@ fun LibraryCard(
 }
 
 @Composable
-fun LibraryDocumentPreview() {
+fun LibraryDocumentPreview(selected: Boolean) {
     Box(Modifier
         .fillMaxWidth()
         .aspectRatio(1f)
@@ -107,7 +119,22 @@ fun LibraryDocumentPreview() {
             color = MaterialTheme.colorScheme.primary,
             shape = RoundedCornerShape(12.dp)
         )
-    )
+    ) {
+        AnimatedVisibility(
+            modifier = Modifier.align(Alignment.Center),
+            visible = selected,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Box(Modifier.background(color = MaterialTheme.colorScheme.primaryContainer, shape = CircleShape)) {
+                Icon(
+                    modifier = Modifier.size(64.dp).padding(8.dp),
+                    painter = painterResource(R.drawable.check_24px),
+                    contentDescription = null
+                )
+            }
+        }
+    }
 }
 
 @Composable

@@ -364,7 +364,11 @@ class LibraryActivity : ComponentActivity() {
                                                     LibraryCard(
                                                         modifier = Modifier.animateItem(),
                                                         selected = selectedItems.contains(document),
-                                                        preview = { LibraryDocumentPreview() },
+                                                        preview = {
+                                                            LibraryDocumentPreview(
+                                                                selected = selectedItems.contains(document)
+                                                            )
+                                                        },
                                                         metadata = {
                                                             LibraryCardMetadata(
                                                                 title = { Text(document.name) },
