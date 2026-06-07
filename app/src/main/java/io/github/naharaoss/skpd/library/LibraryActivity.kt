@@ -326,14 +326,12 @@ class LibraryActivity : ComponentActivity() {
 
                                             LazyVerticalGrid(
                                                 modifier = Modifier.fillMaxWidth(),
-                                                contentPadding = PaddingValues(16.dp),
-                                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                contentPadding = PaddingValues(12.dp),
                                                 columns = GridCells.Adaptive(160.dp)
                                             ) {
                                                 items(folders, key = { it.id }) { folder ->
                                                     LibraryCard(
-                                                        modifier = Modifier.animateItem(),
+                                                        modifier = Modifier.padding(4.dp).animateItem(),
                                                         selected = selectedItems.contains(folder),
                                                         metadata = {
                                                             LibraryCardMetadata(
@@ -356,13 +354,15 @@ class LibraryActivity : ComponentActivity() {
                                                     )
                                                 }
 
-                                                item(span = { GridItemSpan(maxCurrentLineSpan) }) {
-                                                    // Nothing
+                                                if (folders.isNotEmpty()) {
+                                                    item(span = { GridItemSpan(maxCurrentLineSpan) }) {
+                                                        // Nothing
+                                                    }
                                                 }
 
                                                 items(documents, key = { it.id }) { document ->
                                                     LibraryCard(
-                                                        modifier = Modifier.animateItem(),
+                                                        modifier = Modifier.padding(4.dp).animateItem(),
                                                         selected = selectedItems.contains(document),
                                                         preview = {
                                                             LibraryDocumentPreview(
