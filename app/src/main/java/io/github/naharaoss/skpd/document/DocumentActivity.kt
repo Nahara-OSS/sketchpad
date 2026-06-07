@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -40,19 +39,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconToggleButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,7 +67,7 @@ import io.github.naharaoss.skpd.document.ui.LayersPopupContent
 import io.github.naharaoss.skpd.document.ui.RegularDocumentView
 import io.github.naharaoss.skpd.ui.component.resourceIdFromNamedIcon
 import io.github.naharaoss.skpd.ui.theme.SketchpadTheme
-import kotlin.math.roundToInt
+import io.github.naharaoss.skpd.utils.Matrix4
 
 /**
  * The activity for Sketchpad documents. Open this activity with document UID to open existing
@@ -101,8 +94,7 @@ class DocumentActivity : ComponentActivity() {
             val documentViewModel = hiltViewModel(creationCallback = { factory: DocumentViewModel.Factory -> factory.create(documentRef) })
             val brush by documentViewModel.brush.collectAsState()
             val brushColor by documentViewModel.brushColor.collectAsState()
-            val layers by documentViewModel.layers.collectAsState()
-            val activeLayer by documentViewModel.activeLayer.collectAsState()
+            val canvasTransform by documentViewModel.canvasTransform.collectAsState()
             val windowSizeClass = calculateWindowSizeClass(this)
             var showBrushList by remember { mutableStateOf(false) }
             var showLayerList by remember { mutableStateOf(false) }
@@ -115,14 +107,8 @@ class DocumentActivity : ComponentActivity() {
             SketchpadTheme {
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
-                    factory = { RegularDocumentView(it) }
-                ) {
-                    documentViewModel.setView(it)
-
-                    it.onTransformGesture = { matrix ->
-                        // TODO
-                    }
-                }
+                    factory = { RegularDocumentView(it).also(documentViewModel::setView) }
+                )
 
                 Column {
                     Surface(
@@ -166,6 +152,16 @@ class DocumentActivity : ComponentActivity() {
                             }
 
                             Spacer(Modifier.weight(1f))
+
+                            FilledIconToggleButton(
+                                checked = canvasTransform != Matrix4.Identity,
+                                onCheckedChange = { documentViewModel.setCanvasTransform(Matrix4.Identity) }
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.rotate_left_24px),
+                                    contentDescription = "Reset transform"
+                                )
+                            }
 
                             FilledIconToggleButton(
                                 checked = showLayerList,

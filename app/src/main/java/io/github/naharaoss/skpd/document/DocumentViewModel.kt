@@ -13,6 +13,7 @@ import io.github.naharaoss.skpd.resource.LibraryRepository
 import io.github.naharaoss.skpd.settings.SettingsRepository
 import io.github.naharaoss.skpd.utils.BlendMode
 import io.github.naharaoss.skpd.utils.Color
+import io.github.naharaoss.skpd.utils.Matrix4
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,6 +32,7 @@ class DocumentViewModel @AssistedInject constructor(
 ) : ViewModel() {
     private var document: SketchpadDocumentV1? = null
     private var view: DocumentViewInterface? = null
+    private val _canvasTransform = MutableStateFlow(Matrix4.Identity)
     private val _layers = MutableStateFlow<List<LayerRef>>(emptyList())
     private val _activeLayer = MutableStateFlow<LayerRef?>(null)
     private val _brush = settingsRepository.settings
@@ -40,6 +42,7 @@ class DocumentViewModel @AssistedInject constructor(
     private val _brushPreset = _brush
         .map { if (it != null) brushRepository.getPreset(it) else null }
         .stateIn(scope = viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
+    val canvasTransform = _canvasTransform.asStateFlow()
     val layers = _layers.asStateFlow()
     val activeLayer = _activeLayer.asStateFlow()
     val brush = _brush.stateIn(scope = viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
@@ -54,9 +57,7 @@ class DocumentViewModel @AssistedInject constructor(
         }
 
         viewModelScope.launch {
-            _brushPreset.collect {
-                view?.brushPreset = it
-            }
+            _brushPreset.collect { view?.brushPreset = it }
         }
 
         viewModelScope.launch {
@@ -70,12 +71,24 @@ class DocumentViewModel @AssistedInject constructor(
             _activeLayer.value = document.activeLayer?.let(::LayerRef)
             view?.document = document
             view?.layer = document.activeLayer
+            view?.canvasTransform = _canvasTransform.value
             view?.fingerDrawing = settingsRepository.settings.value.input.fingerDrawing
             view?.brushPreset = _brushPreset.value
             view?.brushColor = brushColor.value
+            view?.onTransformGesture = ::onTransformGesture
             view?.triggerDocumentUpdate()
             addCloseable(document)
         }
+    }
+
+    private fun onTransformGesture(input: Matrix4) {
+        _canvasTransform.update { it * input }
+        view?.canvasTransform = _canvasTransform.value
+    }
+
+    fun setCanvasTransform(mat: Matrix4) {
+        _canvasTransform.value = mat
+        view?.canvasTransform = mat
     }
 
     fun setActiveLayer(layer: LayerRef) {
@@ -163,10 +176,12 @@ class DocumentViewModel @AssistedInject constructor(
         if (this.view == view) return
         this.view = view
         view.document = document
+        view.canvasTransform = _canvasTransform.value
         view.layer = document?.activeLayer
         view.fingerDrawing = settingsRepository.settings.value.input.fingerDrawing
         view.brushPreset = _brushPreset.value
         view.brushColor = brushColor.value
+        view.onTransformGesture = ::onTransformGesture
     }
 
     @AssistedFactory
