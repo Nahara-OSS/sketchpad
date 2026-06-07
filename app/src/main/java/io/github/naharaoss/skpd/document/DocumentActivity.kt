@@ -70,6 +70,7 @@ import io.github.naharaoss.skpd.R
 import io.github.naharaoss.skpd.brush.BrushEditorActivity
 import io.github.naharaoss.skpd.brush.BrushListViewModel
 import io.github.naharaoss.skpd.brush.ui.BrushPicker
+import io.github.naharaoss.skpd.document.ui.LayersPopupContent
 import io.github.naharaoss.skpd.document.ui.RegularDocumentView
 import io.github.naharaoss.skpd.ui.component.resourceIdFromNamedIcon
 import io.github.naharaoss.skpd.ui.theme.SketchpadTheme
@@ -301,81 +302,10 @@ class DocumentActivity : ComponentActivity() {
                             }
                         ) { show ->
                             when (show) {
-                                true -> Surface(
-                                    shape = RoundedCornerShape(16.dp),
-                                    shadowElevation = 2.dp
-                                ) {
-                                    Column {
-                                        Row(
-                                            modifier = Modifier
-                                                .padding(start = 16.dp)
-                                                .fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.bodyMedium) {
-                                                Text("Layers")
-                                            }
-
-                                            IconButton({ documentViewModel.addLayer() }) {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.add_24px),
-                                                    contentDescription = "Add layer"
-                                                )
-                                            }
-                                        }
-
-                                        HorizontalDivider(Modifier.fillMaxWidth())
-
-                                        LazyColumn(Modifier.fillMaxWidth()) {
-                                            items(layers.size, key = { layers[layers.size - 1 - it].id }) { index ->
-                                                val layer = layers[layers.size - 1 - index]
-
-                                                SegmentedListItem(
-                                                    onClick = {
-                                                        if (activeLayer == layer) return@SegmentedListItem
-                                                        documentViewModel.setActiveLayer(layer)
-                                                    },
-                                                    shapes = ListItemDefaults.segmentedShapes(index, layers.size),
-                                                    selected = activeLayer == layer,
-                                                    content = { Text(layer.name) },
-                                                    supportingContent = {
-                                                        Row(
-                                                            verticalAlignment = Alignment.CenterVertically,
-                                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                                        ) {
-                                                            Icon(
-                                                                modifier = Modifier.size(12.dp),
-                                                                painter = painterResource(R.drawable.opacity_24px),
-                                                                contentDescription = "Opacity"
-                                                            )
-                                                            Text("${(layer.opacity * 100f).roundToInt()}%")
-                                                            Text("\u2022")
-                                                            Text("Normal")
-                                                        }
-                                                    },
-                                                    trailingContent = {
-                                                        Row {
-                                                            IconButton({ documentViewModel.editLayer(layer, visible = !layer.visible) }) {
-                                                                Icon(
-                                                                    painter = painterResource(if (layer.visible) R.drawable.visibility_24px else R.drawable.visibility_off_24px),
-                                                                    contentDescription = "Toggle visibility"
-                                                                )
-                                                            }
-
-                                                            IconButton({ documentViewModel.deleteLayer(layer) }) {
-                                                                Icon(
-                                                                    painter = painterResource(R.drawable.delete_24px),
-                                                                    contentDescription = "Delete layer"
-                                                                )
-                                                            }
-                                                        }
-                                                    }
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
+                                true -> LayersPopupContent(
+                                    modifier = Modifier.fillMaxSize(),
+                                    documentViewModel = documentViewModel
+                                )
 
                                 false -> Spacer(Modifier.fillMaxWidth())
                             }

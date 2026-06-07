@@ -132,6 +132,7 @@ class DocumentViewModel @AssistedInject constructor(
 
         val layer = layer.copy(name = name, visible = visible, opacity = opacity, blend = blend)
         _layers.update { it.map { if (it.id == layer.id) layer else it } }
+        _activeLayer.update { if (it?.id == layer.id) layer else it }
         return layer
     }
 
