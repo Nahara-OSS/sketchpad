@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -44,6 +45,11 @@ class SettingsRepository @Inject constructor(
 
             _initialized = true
         }
+    }
+
+    suspend fun updateSettings(updater: (AppSettings) -> AppSettings) {
+        _settings.update(updater)
+        local.writeSettings(updater(local.readSettings() ?: _settings.value))
     }
 
     suspend fun updateSettings(settings: AppSettings) {

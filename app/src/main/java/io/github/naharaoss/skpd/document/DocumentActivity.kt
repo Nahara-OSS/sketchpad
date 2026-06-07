@@ -2,7 +2,6 @@ package io.github.naharaoss.skpd.document
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.Surface
 import android.view.WindowInsets
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -39,8 +38,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.HorizontalDivider
@@ -56,7 +53,6 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,27 +61,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Matrix
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.naharaoss.skpd.R
 import io.github.naharaoss.skpd.brush.BrushEditorActivity
 import io.github.naharaoss.skpd.brush.BrushListViewModel
-import io.github.naharaoss.skpd.brush.BrushPresetViewModel
 import io.github.naharaoss.skpd.brush.ui.BrushPicker
-import io.github.naharaoss.skpd.document.ui.DocumentViewInterface
 import io.github.naharaoss.skpd.document.ui.RegularDocumentView
-import io.github.naharaoss.skpd.settings.SettingsViewModel
 import io.github.naharaoss.skpd.ui.component.resourceIdFromNamedIcon
 import io.github.naharaoss.skpd.ui.theme.SketchpadTheme
-import io.github.naharaoss.skpd.utils.BlendMode
-import io.github.naharaoss.skpd.utils.Matrix4
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.math.roundToInt
 
 /**
@@ -94,7 +81,6 @@ import kotlin.math.roundToInt
  */
 @AndroidEntryPoint
 class DocumentActivity : ComponentActivity() {
-    private val settingsViewModel: SettingsViewModel by viewModels()
     private val brushListViewModel: BrushListViewModel by viewModels()
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalGridApi::class)
@@ -112,38 +98,14 @@ class DocumentActivity : ComponentActivity() {
 
         setContent {
             val documentViewModel = hiltViewModel(creationCallback = { factory: DocumentViewModel.Factory -> factory.create(documentRef) })
-            val document by documentViewModel.document.collectAsState()
+            val brush by documentViewModel.brush.collectAsState()
+            val brushColor by documentViewModel.brushColor.collectAsState()
             val layers by documentViewModel.layers.collectAsState()
             val activeLayer by documentViewModel.activeLayer.collectAsState()
-            var canvasTransform by remember { mutableStateOf(Matrix()) }
-            val brushes by brushListViewModel.brushes.collectAsState()
-            var selectedBrush by remember(brushes != null) { mutableStateOf(brushes?.firstOrNull()) }
-            val presetViewModel = selectedBrush?.let { hiltViewModel(key = "BrushItem{${it.id}}", creationCallback = { factory: BrushPresetViewModel.Factory -> factory.create(it) }) }
-            val selectedBrushPreset by (presetViewModel?.preset ?: MutableStateFlow(null)).collectAsStateWithLifecycle()
-            var selectedBrushColor by remember { mutableStateOf(Color.Black) }
-            var selectedBrushBlend by remember { mutableStateOf(BlendMode.SourceOver) }
-            val settings by settingsViewModel.settings.collectAsState()
             val windowSizeClass = calculateWindowSizeClass(this)
             var showBrushList by remember { mutableStateOf(false) }
             var showLayerList by remember { mutableStateOf(false) }
             var showPalette by remember { mutableStateOf(false) }
-            var view by remember { mutableStateOf<DocumentViewInterface?>(null) }
-
-            val displayTransform = when (LocalView.current.display.rotation) {
-                Surface.ROTATION_90 -> Matrix4.Rotate90
-                Surface.ROTATION_180 -> Matrix4.Rotate180
-                Surface.ROTATION_270 -> Matrix4.Rotate270
-                else -> Matrix4.Identity
-            }
-
-            val combinedTransform = Matrix().also {
-                it *= canvasTransform
-                it *= displayTransform.invert().asAndroidx()
-            }
-
-            LaunchedEffect(documentViewModel.changed) {
-                documentViewModel.changed.collect { view?.triggerDocumentUpdate() }
-            }
 
             BackHandler(enabled = showBrushList) {
                 showBrushList = false
@@ -154,20 +116,10 @@ class DocumentActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     factory = { RegularDocumentView(it) }
                 ) {
-                    view = it
-                    it.document = document
-                    it.layer = activeLayer
-                    it.brushPreset = selectedBrushPreset
-                    it.brushColor = selectedBrushColor
-                    it.brushBlend = selectedBrushBlend
-                    it.canvasTransform = combinedTransform
-                    it.fingerDrawing = settings.input.fingerDrawing
+                    documentViewModel.setView(it)
 
                     it.onTransformGesture = { matrix ->
-                        val matrix = displayTransform.transpose() * Matrix4.fromAndroidx(matrix) * displayTransform
-                        val newTransform = Matrix(canvasTransform.values.clone())
-                        newTransform *= matrix.asAndroidx()
-                        canvasTransform = newTransform
+                        // TODO
                     }
                 }
 
@@ -193,7 +145,7 @@ class DocumentActivity : ComponentActivity() {
                                 }
                             ) {
                                 Icon(
-                                    painter = painterResource(resourceIdFromNamedIcon(selectedBrush?.icon ?: "")),
+                                    painter = painterResource(resourceIdFromNamedIcon(brush?.icon ?: "")),
                                     contentDescription = "Brush"
                                 )
                             }
@@ -263,39 +215,16 @@ class DocumentActivity : ComponentActivity() {
                                                 Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                                                 Text("Edit")
                                             }
-
-                                            Button({ showBlendDropdown = true }) {
-                                                Icon(painterResource(R.drawable.opacity_24px), "Blend mode")
-                                                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                                                Text(selectedBrushBlend.name)
-
-                                                DropdownMenu(
-                                                    expanded = showBlendDropdown,
-                                                    onDismissRequest = { showBlendDropdown = false }
-                                                ) {
-                                                    for (mode in BlendMode.entries) {
-                                                        DropdownMenuItem(
-                                                            leadingIcon = { Icon(painterResource(R.drawable.opacity_24px), "Blend mode") },
-                                                            trailingIcon = { if (selectedBrushBlend == mode) Icon(painterResource(R.drawable.check_24px), "Selected") },
-                                                            text = { Text(mode.name) },
-                                                            onClick = {
-                                                                selectedBrushBlend = mode
-                                                                showBlendDropdown = false
-                                                            }
-                                                        )
-                                                    }
-                                                }
-                                            }
                                         }
 
                                         BrushPicker(
                                             modifier = Modifier.fillMaxSize(),
                                             listViewModel = brushListViewModel,
-                                            selected = selectedBrush,
+                                            selected = brush,
                                             compact = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact,
                                             padding = PaddingValues(16.dp),
                                             onBrushSelect = {
-                                                selectedBrush = it
+                                                documentViewModel.setBrush(it)
                                                 showBrushList = false
                                             }
                                         )
@@ -339,8 +268,8 @@ class DocumentActivity : ComponentActivity() {
                                         )) { color ->
                                             Box(Modifier.size(48.dp)) {
                                                 FilledIconToggleButton(
-                                                    checked = selectedBrushColor == color,
-                                                    onCheckedChange = { if (it) selectedBrushColor = color }
+                                                    checked = color == brushColor.toAndroidx(),
+                                                    onCheckedChange = { documentViewModel.setBrushColor(io.github.naharaoss.skpd.utils.Color.Rgb(color.red, color.green, color.blue)) }
                                                 ) {
                                                     Box(Modifier
                                                         .size(24.dp)
@@ -401,11 +330,6 @@ class DocumentActivity : ComponentActivity() {
                                         LazyColumn(Modifier.fillMaxWidth()) {
                                             items(layers.size, key = { layers[layers.size - 1 - it].id }) { index ->
                                                 val layer = layers[layers.size - 1 - index]
-                                                var visible by remember { mutableStateOf(layer.visible) }
-
-                                                LaunchedEffect(documentViewModel.changed) {
-                                                    documentViewModel.changed.collect { visible = layer.visible }
-                                                }
 
                                                 SegmentedListItem(
                                                     onClick = {
@@ -432,9 +356,9 @@ class DocumentActivity : ComponentActivity() {
                                                     },
                                                     trailingContent = {
                                                         Row {
-                                                            IconButton({ documentViewModel.setLayerVisibility(layer, !layer.visible) }) {
+                                                            IconButton({ documentViewModel.editLayer(layer, visible = !layer.visible) }) {
                                                                 Icon(
-                                                                    painter = painterResource(if (visible) R.drawable.visibility_24px else R.drawable.visibility_off_24px),
+                                                                    painter = painterResource(if (layer.visible) R.drawable.visibility_24px else R.drawable.visibility_off_24px),
                                                                     contentDescription = "Toggle visibility"
                                                                 )
                                                             }

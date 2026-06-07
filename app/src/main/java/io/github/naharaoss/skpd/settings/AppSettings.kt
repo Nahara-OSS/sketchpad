@@ -8,4 +8,5 @@ data class AppSettings(
     val input: InputSettings = InputSettings(),
     val performance: PerformanceSettings = PerformanceSettings(),
     val miscellaneous: MiscellaneousSettings = MiscellaneousSettings(),
+    val session: Session = Session()
 )

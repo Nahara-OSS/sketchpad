@@ -38,6 +38,14 @@ class BrushRepository @Inject constructor(
         .map(::wrap)
         .sortedBy { it.name }
 
+    suspend fun getById(id: Long) = dao.getById(id).let {
+        BrushItem(
+            id = it.brushId,
+            name = it.name,
+            icon = it.icon
+        )
+    }
+
     suspend fun createBrush(name: String, icon: String?, preset: BrushType.Preset): BrushItem {
         val reference = UUID.randomUUID().toString()
         val brushRoot = store.referenceRootOf(reference)
