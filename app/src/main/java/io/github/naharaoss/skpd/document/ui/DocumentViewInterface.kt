@@ -1,10 +1,10 @@
 package io.github.naharaoss.skpd.document.ui
 
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Matrix
 import io.github.naharaoss.skpd.brush.BrushType
 import io.github.naharaoss.skpd.document.DocumentAccess
 import io.github.naharaoss.skpd.utils.BlendMode
+import io.github.naharaoss.skpd.utils.Color
+import io.github.naharaoss.skpd.utils.Matrix4
 
 /**
  * Common interface for Android views that can draw on Sketchpad documents.
@@ -66,7 +66,7 @@ interface DocumentViewInterface {
      *
      * The initial value is an identity matrix.
      */
-    var canvasTransform: Matrix
+    var canvasTransform: Matrix4
 
     /**
      * Current brush preset.
@@ -80,7 +80,7 @@ interface DocumentViewInterface {
     /**
      * Current brush color.
      *
-     * The initial color is [Color.Black].
+     * The initial color is black (#000000).
      */
     var brushColor: Color
 
@@ -97,7 +97,7 @@ interface DocumentViewInterface {
      * This may be assigned with a callback function to transform the [canvasTransform] matrix when
      * user drag, zoom or rotate the canvas with gestures.
      */
-    var onTransformGesture: ((Matrix) -> Unit)?
+    var onTransformGesture: ((Matrix4) -> Unit)?
 
     /**
      * Callback for tap gesture.

@@ -2,7 +2,6 @@ package io.github.naharaoss.skpd.utils
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Matrix
 import kotlinx.serialization.Serializable
 import java.nio.ByteBuffer
 import kotlin.math.roundToInt
@@ -70,13 +69,13 @@ fun ByteBuffer.getTileAddress(): TileAddress = TileAddress(
 fun calculateVisibleTiles(
     viewport: Rect,
     canvasSize: Size,
-    canvasTransform: Matrix,
+    canvasTransform: Matrix4,
     tileSize: Int,
     z: Int = 0
 ): Set<TileAddress> {
-    val inverse = Matrix(canvasTransform.values.clone()).apply { invert() }
-    val canvasBounds = inverse.map(viewport)
+    val canvasBounds = canvasTransform.invert().asAndroidx().map(viewport)
     val result = mutableSetOf<TileAddress>()
+    val canvasTransform = canvasTransform.asAndroidx() // TODO
 
     for (y in (canvasBounds.top / tileSize).roundToInt() - 1..(canvasBounds.bottom / tileSize).roundToInt()) {
         for (x in (canvasBounds.left / tileSize).roundToInt() - 1..(canvasBounds.right / tileSize).roundToInt()) {

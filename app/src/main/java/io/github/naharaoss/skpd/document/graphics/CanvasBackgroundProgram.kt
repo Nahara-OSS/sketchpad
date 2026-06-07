@@ -3,10 +3,9 @@ package io.github.naharaoss.skpd.document.graphics
 import android.opengl.GLES30
 import androidx.annotation.WorkerThread
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Matrix
 import io.github.naharaoss.skpd.utils.GLProgram
 import io.github.naharaoss.skpd.utils.GLShader
+import io.github.naharaoss.skpd.utils.Matrix4
 import io.github.naharaoss.skpd.utils.Size
 
 @WorkerThread
@@ -52,19 +51,21 @@ class CanvasBackgroundProgram : AutoCloseable {
 
     fun draw(
         viewport: Rect,
-        canvasTransform: Matrix,
+        canvasTransform: Matrix4,
         canvasSize: Size.Sized,
-        color: Color
+        r: Float,
+        g: Float,
+        b: Float,
+        a: Float
     ) {
         program.use {
             uWorldToClip?.let {
-                val worldToClip = Matrix()
-                worldToClip.scale(x = 2f / viewport.width, y = -2f / viewport.height)
-                GLES30.glUniformMatrix4fv(it, 1, false, worldToClip.values, 0)
+                val worldToClip = Matrix4.Identity.copy(m00 = 2f / viewport.width, m11 = -2f / viewport.height)
+                GLES30.glUniformMatrix4fv(it, 1, false, worldToClip.toFloatArray(), 0)
             }
 
             uCanvasTransform?.let {
-                GLES30.glUniformMatrix4fv(it, 1, false, canvasTransform.values, 0)
+                GLES30.glUniformMatrix4fv(it, 1, false, canvasTransform.toFloatArray(), 0)
             }
 
             uCanvasSize?.let {
@@ -72,7 +73,7 @@ class CanvasBackgroundProgram : AutoCloseable {
             }
 
             uColor?.let {
-                GLES30.glUniform4f(it, color.red, color.green, color.blue, color.alpha)
+                GLES30.glUniform4f(it, r, g, b, a)
             }
 
             GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4)

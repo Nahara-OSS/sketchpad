@@ -1,8 +1,8 @@
 package io.github.naharaoss.skpd.resource
 
-import androidx.compose.ui.graphics.Color
 import io.github.naharaoss.skpd.document.SketchpadDocumentV1
 import io.github.naharaoss.skpd.settings.SettingsRepository
+import io.github.naharaoss.skpd.utils.Color
 import io.github.naharaoss.skpd.utils.Size
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -66,7 +66,8 @@ class LibraryRepository @Inject constructor(
         parent: LibraryItem.Folder,
         name: String,
         size: Size,
-        background: Color
+        backgroundColor: Color,
+        backgroundAlpha: Float
     ): LibraryItem.Document {
         val now = Clock.System.now()
         val reference = UUID.randomUUID().toString()
@@ -78,7 +79,8 @@ class LibraryRepository @Inject constructor(
                 channel = FileChannel.open(documentMainPath, CREATE, READ, WRITE),
                 tileSizeLog = settingsRepository.settings.value.performance.defaultTileSizeLog,
                 size = size,
-                background = background
+                backgroundColor = backgroundColor,
+                backgroundAlpha = backgroundAlpha
             ).use { document ->
                 val layer = document.addLayer()
                 document.activeLayer = layer

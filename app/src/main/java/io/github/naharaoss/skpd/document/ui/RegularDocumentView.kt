@@ -7,27 +7,27 @@ import android.view.MotionEvent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Matrix
 import io.github.naharaoss.skpd.brush.BrushType
 import io.github.naharaoss.skpd.brush.InputProcessor
 import io.github.naharaoss.skpd.brush.StylusInput
 import io.github.naharaoss.skpd.document.DocumentAccess
 import io.github.naharaoss.skpd.document.graphics.DocumentRenderer
 import io.github.naharaoss.skpd.utils.BlendMode
+import io.github.naharaoss.skpd.utils.Color
 import io.github.naharaoss.skpd.utils.GLFramebuffer
+import io.github.naharaoss.skpd.utils.Matrix4
 import io.github.naharaoss.skpd.utils.calculateVisibleTiles
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import kotlin.properties.Delegates
 
 class RegularDocumentView(context: Context) : GLSurfaceView(context), DocumentViewInterface {
-    private var _drawingBoardBackground = Color.Gray
+    private var _drawingBoardBackground: Color = Color.Rgb(0.5f, 0.5f, 0.5f)
     private var _document: DocumentAccess? = null
     private var _layer: DocumentAccess.Layer? = null
-    private var _canvasTransform = Matrix()
+    private var _canvasTransform = Matrix4.Identity
     private var _brushPreset: BrushType.Preset? = null
-    private var _brushColor = Color.Black
+    private var _brushColor: Color = Color.Rgb(0f, 0f, 0f)
 
     private val renderer = Renderer(this)
     private val inputProcessor = object : InputProcessor(true, 10f) {
@@ -36,7 +36,7 @@ class RegularDocumentView(context: Context) : GLSurfaceView(context), DocumentVi
         override fun requestUnbufferedDispatch(event: MotionEvent) = this@RegularDocumentView.requestUnbufferedDispatch(event)
     }
 
-    override var onTransformGesture: ((Matrix) -> Unit)? = null
+    override var onTransformGesture: ((Matrix4) -> Unit)? = null
     override var onTapGesture: ((fingers: Int) -> Unit)? = null
 
     override var drawingBoardBackground: Color
@@ -81,11 +81,10 @@ class RegularDocumentView(context: Context) : GLSurfaceView(context), DocumentVi
             requestRender()
         }
 
-    override var canvasTransform: Matrix
-        get() = Matrix(_canvasTransform.values.clone())
+    override var canvasTransform: Matrix4
+        get() = _canvasTransform
         set(value) {
             if (_canvasTransform == value) return
-            val value = Matrix(value.values.clone())
             _canvasTransform = value
             queueEvent { renderer.setCanvasTransform(value) }
             requestRender()
@@ -130,12 +129,9 @@ class RegularDocumentView(context: Context) : GLSurfaceView(context), DocumentVi
             when (action) {
                 is InputProcessor.Action.Stylus -> {
                     val clipPosition = Offset(x = action.input.x * 2f / width - 1f, y = 1f - action.input.y * 2f / height)
-                    val worldToClip = Matrix().apply { scale(x = 2f / width, y = -2f / height) }
-                    val clipToCanvas = Matrix()
-                    clipToCanvas *= canvasTransform
-                    clipToCanvas *= worldToClip
-                    clipToCanvas.invert()
-                    val canvasPosition = clipToCanvas.map(clipPosition)
+                    val worldToClip = Matrix4.Identity.copy(m00 = 2f / width, m11 = -2f / height)
+                    val clipToCanvas = (canvasTransform * worldToClip).invert()
+                    val canvasPosition = clipToCanvas.asAndroidx().map(clipPosition)
                     val input = action.input.copy(x = canvasPosition.x, y = canvasPosition.y)
                     val brushBlend = if (action.eraser) BlendMode.Erase else brushBlend
 
@@ -182,7 +178,7 @@ class RegularDocumentView(context: Context) : GLSurfaceView(context), DocumentVi
         private var initialized = false
         private var width by Delegates.notNull<Int>()
         private var height by Delegates.notNull<Int>()
-        private var canvasTransform = Matrix()
+        private var canvasTransform = Matrix4.Identity
         private val viewport get() = Rect(offset = Offset(x = width / -2f, y = height / -2f), size = Size(width = width.toFloat(), height = height.toFloat()))
         private var documentRenderer: DocumentRenderer? = null
         private var layer: DocumentAccess.Layer? = null
@@ -222,7 +218,8 @@ class RegularDocumentView(context: Context) : GLSurfaceView(context), DocumentVi
 
             if (documentRenderer == null) {
                 framebuffer.bind {
-                    setClearColor(view._drawingBoardBackground)
+                    val (r, g, b) = view._drawingBoardBackground.toRgb()
+                    setClearColor(r, g, b, 1f)
                     clear(GLFramebuffer.ClearType.Color)
                 }
             } else {
@@ -230,7 +227,8 @@ class RegularDocumentView(context: Context) : GLSurfaceView(context), DocumentVi
                     viewport = viewport,
                     canvasTransform = canvasTransform,
                     framebuffer = framebuffer,
-                    background = view._drawingBoardBackground,
+                    backgroundColor = view._drawingBoardBackground,
+                    backgroundAlpha = 1f,
                     stencil = true
                 )
             }
@@ -259,7 +257,7 @@ class RegularDocumentView(context: Context) : GLSurfaceView(context), DocumentVi
             this.layer = layer
         }
 
-        fun setCanvasTransform(matrix: Matrix) {
+        fun setCanvasTransform(matrix: Matrix4) {
             if (!initialized) return
             if (canvasTransform == matrix) return
             canvasTransform = matrix
@@ -299,7 +297,7 @@ class RegularDocumentView(context: Context) : GLSurfaceView(context), DocumentVi
             val affectedTiles = calculateVisibleTiles(
                 viewport = affectedRect,
                 canvasSize = documentRenderer.document.size,
-                canvasTransform = Matrix(),
+                canvasTransform = Matrix4.Identity,
                 tileSize = documentRenderer.document.tileSize
             )
 

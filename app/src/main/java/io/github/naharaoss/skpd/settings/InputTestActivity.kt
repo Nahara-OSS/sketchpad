@@ -34,7 +34,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
@@ -49,6 +48,7 @@ import io.github.naharaoss.skpd.brush.Sensor
 import io.github.naharaoss.skpd.brush.StylusInput
 import io.github.naharaoss.skpd.ui.component.TooltipIconButton
 import io.github.naharaoss.skpd.ui.theme.SketchpadTheme
+import io.github.naharaoss.skpd.utils.Matrix4
 
 @AndroidEntryPoint
 class InputTestActivity : ComponentActivity() {
@@ -64,7 +64,7 @@ class InputTestActivity : ComponentActivity() {
             val settings by settingsViewModel.settings.collectAsState()
             val stroke = remember { mutableStateListOf<StylusInput>() }
             var lastAction by remember { mutableStateOf<InputProcessor.Action?>(null) }
-            var canvasTransform by remember { mutableStateOf(Matrix()) }
+            var canvasTransform by remember { mutableStateOf(Matrix4.Identity) }
             val boxColor = MaterialTheme.colorScheme.tertiary
             val strokeColor = MaterialTheme.colorScheme.primary
             val eventColor = MaterialTheme.colorScheme.secondary
@@ -88,7 +88,7 @@ class InputTestActivity : ComponentActivity() {
                     Canvas(Modifier.padding(innerPadding).fillMaxSize()) {
                         withTransform({
                             translate(size.width / 2f, size.height / 2f)
-                            transform(canvasTransform)
+                            transform(canvasTransform.asAndroidx())
                         }) {
                             drawRect(
                                 topLeft = Offset(size.width / -2f, size.height / -2f),
@@ -170,7 +170,7 @@ class InputTestActivity : ComponentActivity() {
 
                                     Text("Transforming matrix:")
                                     Grid(config = { repeat(4) { column(50.dp) } }) {
-                                        for (value in lastAction.matrix.values) {
+                                        for (value in lastAction.matrix.toFloatArray()) {
                                             Text("%.2f".format(value))
                                         }
                                     }
@@ -179,7 +179,7 @@ class InputTestActivity : ComponentActivity() {
 
                                     Text("Canvas transformation matrix:")
                                     Grid(config = { repeat(4) { column(50.dp) } }) {
-                                        for (value in canvasTransform.values) {
+                                        for (value in canvasTransform.toFloatArray()) {
                                             Text("%.2f".format(value))
                                         }
                                     }
@@ -219,9 +219,7 @@ class InputTestActivity : ComponentActivity() {
                                     }
 
                                     is InputProcessor.Action.Transform -> {
-                                        val newTransform = Matrix(canvasTransform.values.clone())
-                                        newTransform *= action.matrix
-                                        canvasTransform = newTransform
+                                        canvasTransform *= action.matrix
                                     }
 
                                     else -> {}

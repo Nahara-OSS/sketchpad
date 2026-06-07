@@ -1,7 +1,7 @@
 package io.github.naharaoss.skpd.document
 
-import androidx.compose.ui.graphics.Color
 import io.github.naharaoss.skpd.utils.BlendMode
+import io.github.naharaoss.skpd.utils.Color
 import io.github.naharaoss.skpd.utils.Size
 import io.github.naharaoss.skpd.utils.TileAddress
 import java.nio.ByteBuffer
@@ -18,7 +18,8 @@ interface DocumentAccess {
     val bytesPerTile get() = tileSize * tileSize * 4
     val size: Size
     val layers: List<Layer>
-    val background: Color
+    val backgroundColor: Color
+    val backgroundAlpha: Float
 
     /**
      * Open document writer.

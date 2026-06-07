@@ -36,4 +36,9 @@ sealed interface Color {
             }
         }
     }
+
+    companion object {
+        val Black = Rgb(0f, 0f, 0f)
+        val White = Rgb(1f, 1f, 1f)
+    }
 }

@@ -6,7 +6,6 @@ import androidx.annotation.WorkerThread
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Matrix
 import io.github.naharaoss.skpd.R
 import io.github.naharaoss.skpd.brush.BrushType
@@ -14,11 +13,13 @@ import io.github.naharaoss.skpd.brush.Dynamic
 import io.github.naharaoss.skpd.brush.Sensor
 import io.github.naharaoss.skpd.brush.StylusInput
 import io.github.naharaoss.skpd.brush.lerp
+import io.github.naharaoss.skpd.utils.Color
 import io.github.naharaoss.skpd.utils.GLFramebuffer
 import io.github.naharaoss.skpd.utils.GLProgram
 import io.github.naharaoss.skpd.utils.GLShader
 import io.github.naharaoss.skpd.utils.GLTexture2D
 import io.github.naharaoss.skpd.utils.Graph
+import io.github.naharaoss.skpd.utils.Matrix4
 import io.github.naharaoss.skpd.utils.union
 import java.nio.Buffer
 import java.nio.ByteBuffer
@@ -413,7 +414,7 @@ object StampBrush : BrushType<StampBrush.Preset> {
                 attach(GLFramebuffer.Attachment.Color(0), colorTexture)
                 attach(GLFramebuffer.Attachment.Depth, depthTexture)
                 ensureCompleted()
-                setClearColor(Color.Transparent)
+                setClearColor(0f, 0f, 0f, 0f)
                 setClearDepth(0f)
                 clear(GLFramebuffer.ClearType.Color, GLFramebuffer.ClearType.Depth)
             }
@@ -511,15 +512,17 @@ object StampBrush : BrushType<StampBrush.Preset> {
             falloff: GLTexture2D,
             stamps: Buffer,
             count: Int,
-            transform: Matrix,
+            transform: Matrix4,
             color: Color
         ) {
+            val (r, g, b) = color.toRgb()
+
             program.use {
                 GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
                 falloff.bind()
 
-                GLES30.glUniformMatrix4fv(uTransform, 1, false, transform.values, 0)
-                GLES30.glUniform4f(uColor, color.red, color.green, color.blue, color.alpha)
+                GLES30.glUniformMatrix4fv(uTransform, 1, false, transform.toFloatArray(), 0)
+                GLES30.glUniform4f(uColor, r, g, b, 1f)
                 GLES30.glUniform1i(uFalloffGraph, 0)
 
                 GLES30.glEnableVertexAttribArray(iPosition)
@@ -733,10 +736,11 @@ object StampBrush : BrushType<StampBrush.Preset> {
             if (stampCount == 0) return
 
             val tile = tiles.getOrPut(tileKey, { InternalTile(tileRect) })
-            val transform = Matrix()
-            transform.scale(x = 2f / tileRect.width, y = -2f / tileRect.height)
-            transform.translate(x = tileRect.width / -2f, y = tileRect.height / -2f)
-            transform.translate(x = -tileRect.left, y = -tileRect.top)
+            val transform = Matrix4.fromAndroidx(Matrix().apply {
+                scale(x = 2f / tileRect.width, y = -2f / tileRect.height)
+                translate(x = tileRect.width / -2f, y = tileRect.height / -2f)
+                translate(x = -tileRect.left, y = -tileRect.top)
+            })
 
             tile.framebuffer.bind {
                 when (preset.tip) {
@@ -746,7 +750,7 @@ object StampBrush : BrushType<StampBrush.Preset> {
             }
         }
 
-        override fun renderTile(tileKey: Any, tileRect: Rect, framebuffer: GLFramebuffer, transform: Matrix) {
+        override fun renderTile(tileKey: Any, tileRect: Rect, framebuffer: GLFramebuffer, transform: Matrix4) {
             val tile = tiles[tileKey] ?: return
 
             framebuffer.bind {
@@ -757,7 +761,7 @@ object StampBrush : BrushType<StampBrush.Preset> {
                     tile.depthTexture.bind()
                     GLES30.glUniform1i(uMergeProgramColorTexture, 0)
                     GLES30.glUniform1i(uMergeProgramDepthTexture, 1)
-                    GLES30.glUniformMatrix4fv(uMergeProgramTransform, 1, false, transform.values, 0)
+                    GLES30.glUniformMatrix4fv(uMergeProgramTransform, 1, false, transform.toFloatArray(), 0)
                     GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4)
                 }
             }

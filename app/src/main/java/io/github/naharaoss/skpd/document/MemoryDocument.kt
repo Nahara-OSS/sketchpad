@@ -1,7 +1,7 @@
 package io.github.naharaoss.skpd.document
 
-import androidx.compose.ui.graphics.Color
 import io.github.naharaoss.skpd.utils.BlendMode
+import io.github.naharaoss.skpd.utils.Color
 import io.github.naharaoss.skpd.utils.Size
 import io.github.naharaoss.skpd.utils.TileAddress
 import java.nio.ByteBuffer
@@ -11,7 +11,8 @@ import kotlin.concurrent.withLock
 class MemoryDocument(
     override val tileSizeLog: Int,
     override var size: Size,
-    override var background: Color
+    override var backgroundColor: Color,
+    override val backgroundAlpha: Float
 ) : DocumentAccess {
     private val lock = ReentrantLock()
     private val _layers = mutableListOf<Layer>()

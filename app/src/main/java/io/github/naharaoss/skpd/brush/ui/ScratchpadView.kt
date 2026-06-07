@@ -8,15 +8,15 @@ import android.view.MotionEvent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Matrix
 import io.github.naharaoss.skpd.brush.BrushType
 import io.github.naharaoss.skpd.brush.InputProcessor
 import io.github.naharaoss.skpd.brush.StylusInput
 import io.github.naharaoss.skpd.brush.impl.StampBrush
+import io.github.naharaoss.skpd.utils.Color
 import io.github.naharaoss.skpd.utils.GLBlitProgram
 import io.github.naharaoss.skpd.utils.GLFramebuffer
 import io.github.naharaoss.skpd.utils.GLTexture2D
+import io.github.naharaoss.skpd.utils.Matrix4
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -53,7 +53,7 @@ class ScratchpadView(context: Context) : GLSurfaceView(context) {
                 attach(GLFramebuffer.Attachment.Color(0), scratchpadTexture)
                 ensureCompleted()
                 setViewport(0, 0, 1024, 1024)
-                setClearColor(Color.Transparent)
+                setClearColor(0f, 0f, 0f, 0f)
                 clear(GLFramebuffer.ClearType.Color)
             }
         }
@@ -89,7 +89,7 @@ class ScratchpadView(context: Context) : GLSurfaceView(context) {
             scratchpadFramebuffer = scratchpadFramebuffer.copy(width = width, height = height)
             scratchpadFramebuffer.bind {
                 setViewport(0, 0, width, height)
-                setClearColor(Color.Transparent)
+                setClearColor(0f, 0f, 0f, 0f)
                 clear(GLFramebuffer.ClearType.Color)
             }
         }
@@ -101,7 +101,7 @@ class ScratchpadView(context: Context) : GLSurfaceView(context) {
 
             GLFramebuffer.default(width, height).bind {
                 setViewport(0, 0, width, height)
-                setClearColor(Color.White)
+                setClearColor(1f, 1f, 1f, 1f)
                 clear(GLFramebuffer.ClearType.Color)
                 blitProgram.blit(scratchpadTexture)
             }
@@ -110,7 +110,7 @@ class ScratchpadView(context: Context) : GLSurfaceView(context) {
                 tileKey = Unit,
                 tileRect = rect,
                 framebuffer = GLFramebuffer.default(width, height),
-                transform = Matrix()
+                transform = Matrix4.Identity
             )
 
             GLES30.glDisable(GLES30.GL_BLEND)
@@ -132,7 +132,7 @@ class ScratchpadView(context: Context) : GLSurfaceView(context) {
                     tileKey = Unit,
                     tileRect = rect,
                     framebuffer = scratchpadFramebuffer,
-                    transform = Matrix()
+                    transform = Matrix4.Identity
                 )
             }
 

@@ -1,12 +1,11 @@
 package io.github.naharaoss.skpd.document
 
-import androidx.compose.ui.graphics.Color
 import io.github.naharaoss.container.ByteChannelUtils
 import io.github.naharaoss.container.ContainerDocument
 import io.github.naharaoss.skpd.document.SketchpadDocumentV1.Companion.CHUNK_TYPE_LAYER_STACK
 import io.github.naharaoss.skpd.document.SketchpadDocumentV1.Companion.CHUNK_TYPE_METADATA
 import io.github.naharaoss.skpd.utils.BlendMode
-import io.github.naharaoss.skpd.utils.ColorSerializer
+import io.github.naharaoss.skpd.utils.Color
 import io.github.naharaoss.skpd.utils.Size
 import io.github.naharaoss.skpd.utils.TileAddress
 import io.github.naharaoss.skpd.utils.UUIDSerializer
@@ -60,9 +59,13 @@ class SketchpadDocumentV1 private constructor(private val container: ContainerDo
     override val tileSizeLog: Int get() = metadata.tileSizeLog
     override val layers: List<Layer> get() = _layerStack.layers.map { _layers[it.id]!! }
 
-    override var background: Color
-        get() = metadata.background
-        set(value) { metadata = metadata.copy(background = value) }
+    override var backgroundColor: Color
+        get() = metadata.backgroundColor
+        set(value) { metadata = metadata.copy(backgroundColor = value) }
+
+    override var backgroundAlpha: Float
+        get() = metadata.backgroundAlpha
+        set(value) { metadata = metadata.copy(backgroundAlpha = value) }
 
     var activeLayer: Layer?
         get() = layerStack.active?.let { _layers[it] }
@@ -131,7 +134,8 @@ class SketchpadDocumentV1 private constructor(private val container: ContainerDo
     private data class Metadata(
         val tileSizeLog: Int,
         val size: Size,
-        @Serializable(with = ColorSerializer::class) val background: Color
+        val backgroundColor: Color,
+        val backgroundAlpha: Float
     )
 
     /**
@@ -445,14 +449,16 @@ class SketchpadDocumentV1 private constructor(private val container: ContainerDo
             channel: SeekableByteChannel,
             tileSizeLog: Int,
             size: Size,
-            background: Color
+            backgroundColor: Color,
+            backgroundAlpha: Float
         ): SketchpadDocumentV1 {
             val container = ContainerDocument.init(channel, NAMESPACE.toByteArray(Charsets.UTF_8))
 
             container.allocateWithJson(CHUNK_TYPE_METADATA, Metadata(
                 tileSizeLog = tileSizeLog,
                 size = size,
-                background = background
+                backgroundColor = backgroundColor,
+                backgroundAlpha = backgroundAlpha
             ))
 
             container.allocateWithJson(CHUNK_TYPE_LAYER_STACK, LayerStack(

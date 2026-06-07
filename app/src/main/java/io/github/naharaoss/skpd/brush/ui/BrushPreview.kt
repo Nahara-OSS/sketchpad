@@ -12,13 +12,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.viewinterop.AndroidView
 import io.github.naharaoss.skpd.brush.BrushType
 import io.github.naharaoss.skpd.brush.StylusInput
 import io.github.naharaoss.skpd.brush.impl.StampBrush
+import io.github.naharaoss.skpd.utils.Color
 import io.github.naharaoss.skpd.utils.GLFramebuffer
+import io.github.naharaoss.skpd.utils.Matrix4
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.math.PI
@@ -29,9 +29,10 @@ import kotlin.math.sin
 fun BrushPreview(
     modifier: Modifier = Modifier,
     preset: BrushType.Preset,
-    color: Color = Color.Unspecified
+    color: Color? = null
 ) {
-    val strokeColor = if (color == Color.Unspecified) LocalContentColor.current else color
+    val (r, g, b) = LocalContentColor.current
+    val strokeColor = color ?: Color.Rgb(r, g, b)
 
     AndroidView(
         modifier = modifier,
@@ -215,7 +216,7 @@ private class BrushPreviewRenderThread(
                             bottomRight = Offset(x = width.toFloat(), y = height.toFloat())
                         ),
                         framebuffer = GLFramebuffer.default(width, height),
-                        transform = Matrix()
+                        transform = Matrix4.Identity
                     )
 
                     if (!EGL14.eglSwapBuffers(eglDisplay, eglSurface)) throw Exception("Unable to swap buffer: eglSwapBuffers()")

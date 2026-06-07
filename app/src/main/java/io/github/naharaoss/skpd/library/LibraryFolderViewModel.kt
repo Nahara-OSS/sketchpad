@@ -1,6 +1,5 @@
 package io.github.naharaoss.skpd.library
 
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -9,6 +8,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.naharaoss.skpd.resource.LibraryItem
 import io.github.naharaoss.skpd.resource.LibraryRepository
+import io.github.naharaoss.skpd.utils.Color
 import io.github.naharaoss.skpd.utils.Size
 import io.github.naharaoss.skpd.utils.prepend
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,7 +50,7 @@ class LibraryFolderViewModel @AssistedInject constructor(
     }
 
     suspend fun createFolder(name: String) = libraryRepository.createFolder(folder, name)
-    suspend fun createDocument(name: String, size: Size) = libraryRepository.createDocument(folder, name, size, Color.White)
+    suspend fun createDocument(name: String, size: Size) = libraryRepository.createDocument(folder, name, size, Color.White, 1f)
     suspend fun renameItem(item: LibraryItem, newName: String) = libraryRepository.renameItem(item, newName)
     suspend fun deleteItem(item: LibraryItem) = libraryRepository.deleteItem(item)
 

@@ -5,9 +5,9 @@ import androidx.annotation.StringRes
 import androidx.annotation.WorkerThread
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Matrix
+import io.github.naharaoss.skpd.utils.Color
 import io.github.naharaoss.skpd.utils.GLFramebuffer
+import io.github.naharaoss.skpd.utils.Matrix4
 
 /**
  * **Separation of tile processing and tile rendering**: The processing and rendering stages are
@@ -130,7 +130,7 @@ interface BrushType<P : BrushType.Preset> {
             tileKey: Any,
             tileRect: Rect,
             framebuffer: GLFramebuffer,
-            transform: Matrix
+            transform: Matrix4
         )
 
         /**
@@ -153,7 +153,7 @@ interface BrushType<P : BrushType.Preset> {
             override fun beginStroke() = renderer.beginStroke()
             override fun consumeInput(input: StylusInput): Rect = renderer.consumeInput(input)
             override fun consumeTile(tileKey: Any, tileRect: Rect) = renderer.consumeTile(tileKey, tileRect)
-            override fun renderTile(tileKey: Any, tileRect: Rect, framebuffer: GLFramebuffer, transform: Matrix) = renderer.renderTile(tileKey, tileRect, framebuffer, transform)
+            override fun renderTile(tileKey: Any, tileRect: Rect, framebuffer: GLFramebuffer, transform: Matrix4) = renderer.renderTile(tileKey, tileRect, framebuffer, transform)
             override fun endStroke() = renderer.endStroke()
             override fun close() = renderer.close()
         }

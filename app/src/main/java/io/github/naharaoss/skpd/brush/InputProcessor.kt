@@ -3,6 +3,7 @@ package io.github.naharaoss.skpd.brush
 import android.view.MotionEvent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Matrix
+import io.github.naharaoss.skpd.utils.Matrix4
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.max
@@ -168,7 +169,7 @@ abstract class InputProcessor(
                         val currPos = Offset(event.getX(event.findPointerIndex(p1.id)), event.getY(event.findPointerIndex(p1.id)))
                         val delta = currPos - prevPos
                         this.fingers = this.fingers.mapValues { (key, value) -> if (key == p1) currPos else value }
-                        listOf(Action.Transform(Matrix().also { it.translate(x = delta.x, y = delta.y) }))
+                        listOf(Action.Transform(Matrix4.Identity.copy(m30 = delta.x, m31 = delta.y)))
                     }
                     true if (fingers.size == 2) -> {
                         val p1 = fingers[0]
@@ -191,13 +192,13 @@ abstract class InputProcessor(
                             }
                         }
 
-                        listOf(Action.Transform(Matrix().apply {
+                        listOf(Action.Transform(Matrix4.fromAndroidx(Matrix().apply {
                             translate(x = currCentroid.x - width / 2f, y = currCentroid.y - height / 2f)
                             rotateZ(rotate * 180f / PI.toFloat())
                             scale(x = scale, y = scale)
                             translate(x = -(currCentroid.x - width / 2f), y = -(currCentroid.y - height / 2f))
                             translate(x = translate.x, y = translate.y)
-                        }))
+                        })))
                     }
                     else -> emptyList()
                 }
@@ -276,7 +277,7 @@ abstract class InputProcessor(
          *
          * User is trying to transform (move, rotate or scale) the canvas.
          */
-        data class Transform(val matrix: Matrix) : Action
+        data class Transform(val matrix: Matrix4) : Action
 
         /**
          * Tap gesture.

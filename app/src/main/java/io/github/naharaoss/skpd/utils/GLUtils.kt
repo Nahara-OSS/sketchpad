@@ -2,7 +2,6 @@ package io.github.naharaoss.skpd.utils
 
 import android.opengl.GLES30
 import android.util.Log
-import androidx.compose.ui.graphics.Color
 import androidx.graphics.lowlatency.BufferInfo
 import java.nio.Buffer
 
@@ -172,7 +171,7 @@ data class GLFramebuffer(val id: Int, val width: Int, val height: Int) : AutoClo
 
         fun resetViewport() = GLES30.glViewport(0, 0, framebuffer.width, framebuffer.height)
         fun setViewport(x: Int, y: Int, width: Int, height: Int) = GLES30.glViewport(x, y, width, height)
-        fun setClearColor(color: Color) = GLES30.glClearColor(color.red, color.green, color.blue, color.alpha)
+        fun setClearColor(r: Float, g: Float, b: Float, a: Float) = GLES30.glClearColor(r, g, b, a)
         fun setClearDepth(depth: Float) = GLES30.glClearDepthf(depth)
         fun setClearStencil(stencil: Int) = GLES30.glClearStencil(stencil)
         fun clear(vararg types: ClearType) = GLES30.glClear(types.map { it.gl }.reduce { acc, type -> acc or type })

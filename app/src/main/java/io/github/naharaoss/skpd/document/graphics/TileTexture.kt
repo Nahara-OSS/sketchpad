@@ -2,7 +2,6 @@ package io.github.naharaoss.skpd.document.graphics
 
 import android.opengl.GLES30
 import androidx.annotation.WorkerThread
-import androidx.compose.ui.graphics.Color
 import io.github.naharaoss.skpd.utils.GLFramebuffer
 import io.github.naharaoss.skpd.utils.GLTexture2D
 import java.nio.Buffer
@@ -37,7 +36,7 @@ class TileTexture(private val tileSize: Int, buffer: Buffer?) : AutoCloseable {
 
             if (buffer == null) {
                 setViewport(0, 0, tileSize, tileSize)
-                setClearColor(Color.Transparent)
+                setClearColor(0f, 0f, 0f, 0f)
                 clear(GLFramebuffer.ClearType.Color)
             }
         }

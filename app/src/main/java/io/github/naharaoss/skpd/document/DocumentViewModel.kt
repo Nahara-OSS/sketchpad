@@ -50,9 +50,7 @@ class DocumentViewModel @AssistedInject constructor(
 
     init {
         viewModelScope.launch {
-            settingsRepository.settings.collect { setting ->
-                view?.fingerDrawing = setting.input.fingerDrawing
-            }
+            settingsRepository.settings.collect { view?.fingerDrawing = it.input.fingerDrawing }
         }
 
         viewModelScope.launch {
@@ -62,9 +60,7 @@ class DocumentViewModel @AssistedInject constructor(
         }
 
         viewModelScope.launch {
-            brushColor.collect {
-                view?.brushColor = it.toAndroidx()
-            }
+            brushColor.collect { view?.brushColor = it }
         }
 
         viewModelScope.launch {
@@ -76,7 +72,7 @@ class DocumentViewModel @AssistedInject constructor(
             view?.layer = document.activeLayer
             view?.fingerDrawing = settingsRepository.settings.value.input.fingerDrawing
             view?.brushPreset = _brushPreset.value
-            view?.brushColor = brushColor.value.toAndroidx()
+            view?.brushColor = brushColor.value
             view?.triggerDocumentUpdate()
             addCloseable(document)
         }
@@ -169,7 +165,7 @@ class DocumentViewModel @AssistedInject constructor(
         view.layer = document?.activeLayer
         view.fingerDrawing = settingsRepository.settings.value.input.fingerDrawing
         view.brushPreset = _brushPreset.value
-        view.brushColor = brushColor.value.toAndroidx()
+        view.brushColor = brushColor.value
     }
 
     @AssistedFactory

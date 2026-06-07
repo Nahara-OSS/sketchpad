@@ -1,5 +1,6 @@
 package io.github.naharaoss.skpd.utils
 
+import android.view.Surface
 import androidx.compose.ui.graphics.Matrix
 import kotlinx.serialization.Serializable
 
@@ -36,12 +37,14 @@ data class Matrix4(
         else -> throw Exception("Invalid column number: $col")
     }
 
-    fun asAndroidx() = Matrix(floatArrayOf(
+    fun toFloatArray() = floatArrayOf(
         m00, m01, m02, m03,
         m10, m11, m12, m13,
         m20, m21, m22, m23,
         m30, m31, m32, m33,
-    ))
+    )
+
+    fun asAndroidx() = Matrix(toFloatArray())
 
     fun transpose() = Matrix4(
         m00, m10, m20, m30,
@@ -70,6 +73,16 @@ data class Matrix4(
         val Rotate90 = Identity.copy(m00 = 0f, m01 = 1f, m10 = -1f, m11 = 0f)
         val Rotate180 = Identity.copy(m00 = -1f, m01 = 0f, m10 = 0f, m11 = -1f)
         val Rotate270 = Identity.copy(m00 = 0f, m01 = -1f, m10 = 1f, m11 = 0f)
+
+        /**
+         * Obtain surface orientation as matrix.
+         */
+        fun fromSurfaceOrientation(v: Int) = when (v) {
+            Surface.ROTATION_90 -> Rotate90
+            Surface.ROTATION_180 -> Rotate180
+            Surface.ROTATION_270 -> Rotate270
+            else -> Identity
+        }
 
         fun fromAndroidx(m: Matrix) = Matrix4(
             m.values[0], m.values[1], m.values[2], m.values[3],

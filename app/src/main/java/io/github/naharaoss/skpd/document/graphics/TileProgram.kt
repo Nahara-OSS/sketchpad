@@ -3,10 +3,10 @@ package io.github.naharaoss.skpd.document.graphics
 import android.opengl.GLES30
 import androidx.annotation.WorkerThread
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Matrix
 import io.github.naharaoss.skpd.utils.GLProgram
 import io.github.naharaoss.skpd.utils.GLShader
 import io.github.naharaoss.skpd.utils.GLTexture2D
+import io.github.naharaoss.skpd.utils.Matrix4
 import io.github.naharaoss.skpd.utils.TileAddress
 
 @WorkerThread
@@ -59,7 +59,7 @@ class TileProgram : AutoCloseable {
         source: GLTexture2D,
         tileSize: Int,
         viewport: Rect,
-        canvasTransform: Matrix,
+        canvasTransform: Matrix4,
         tileAddress: TileAddress
     ) {
         program.use {
@@ -68,13 +68,12 @@ class TileProgram : AutoCloseable {
             }
 
             uWorldToClip?.let {
-                val worldToClip = Matrix()
-                worldToClip.scale(x = 2f / viewport.width, y = -2f / viewport.height)
-                GLES30.glUniformMatrix4fv(it, 1, false, worldToClip.values, 0)
+                val worldToClip = Matrix4.Identity.copy(m00 = 2f / viewport.width, m11 = -2f / viewport.height)
+                GLES30.glUniformMatrix4fv(it, 1, false, worldToClip.toFloatArray(), 0)
             }
 
             uCanvasTransform?.let {
-                GLES30.glUniformMatrix4fv(it, 1, false, canvasTransform.values, 0)
+                GLES30.glUniformMatrix4fv(it, 1, false, canvasTransform.toFloatArray(), 0)
             }
 
             uTilePosition?.let {

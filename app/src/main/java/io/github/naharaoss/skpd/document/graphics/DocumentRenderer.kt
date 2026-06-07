@@ -3,10 +3,10 @@ package io.github.naharaoss.skpd.document.graphics
 import android.opengl.GLES30
 import androidx.annotation.WorkerThread
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Matrix
 import io.github.naharaoss.skpd.document.DocumentAccess
+import io.github.naharaoss.skpd.utils.Color
 import io.github.naharaoss.skpd.utils.GLFramebuffer
+import io.github.naharaoss.skpd.utils.Matrix4
 import io.github.naharaoss.skpd.utils.Size
 import io.github.naharaoss.skpd.utils.TileAddress
 import io.github.naharaoss.skpd.utils.calculateVisibleTiles
@@ -33,7 +33,7 @@ class DocumentRenderer(val document: DocumentAccess) : AutoCloseable {
      * @param [canvasTransform] The transformation of canvas
      * @param [z] Pass `0` to parameter
      */
-    fun update(viewport: Rect, canvasTransform: Matrix, z: Int = 0) {
+    fun update(viewport: Rect, canvasTransform: Matrix4, z: Int = 0) {
         val newVisibleTiles = calculateVisibleTiles(
             viewport = viewport,
             canvasSize = document.size,
@@ -67,32 +67,37 @@ class DocumentRenderer(val document: DocumentAccess) : AutoCloseable {
      * @param [viewport] The viewport rectangle
      * @param [canvasTransform] The transformation of canvas
      * @param [framebuffer] The target framebuffer to render into
-     * @param [background] Background color of drawing board
+     * @param [backgroundColor] Background color of drawing board
+     * @param [backgroundAlpha] Background alpha of drawing board
      * @param [stencil] Whether to use stencil to cut the canvas (usually disabled when exporting)
      */
     fun render(
         viewport: Rect,
-        canvasTransform: Matrix,
+        canvasTransform: Matrix4,
         framebuffer: GLFramebuffer,
-        background: Color = document.background,
+        backgroundColor: Color = document.backgroundColor,
+        backgroundAlpha: Float = document.backgroundAlpha,
         stencil: Boolean = true,
     ) {
         val documentSize = document.size
 
         framebuffer.bind {
+            val (bgR, bgG, bgB) = backgroundColor.toRgb()
+            val (docR, docG, docB) = document.backgroundColor.toRgb()
+
             when (documentSize) {
                 is Size.Sized -> {
                     if (stencil) {
                         GLES30.glEnable(GLES30.GL_STENCIL_TEST)
                         setClearStencil(0x00)
-                        setClearColor(background)
+                        setClearColor(bgR, bgG, bgB, backgroundAlpha)
                         clear(GLFramebuffer.ClearType.Color, GLFramebuffer.ClearType.Stencil)
 
                         GLES30.glStencilFunc(GLES30.GL_ALWAYS, 1, 0xFF)
                         GLES30.glStencilOp(GLES30.GL_KEEP, GLES30.GL_KEEP, GLES30.GL_REPLACE)
                         GLES30.glStencilMask(0xFF)
                     } else {
-                        setClearColor(background)
+                        setClearColor(bgR, bgG, bgB, backgroundAlpha)
                         clear(GLFramebuffer.ClearType.Color)
                     }
 
@@ -100,7 +105,10 @@ class DocumentRenderer(val document: DocumentAccess) : AutoCloseable {
                         viewport = viewport,
                         canvasTransform = canvasTransform,
                         canvasSize = documentSize,
-                        color = document.background
+                        r = docR,
+                        g = docG,
+                        b = docB,
+                        a = document.backgroundAlpha
                     )
 
                     if (stencil) {
@@ -110,7 +118,7 @@ class DocumentRenderer(val document: DocumentAccess) : AutoCloseable {
                 }
 
                 is Size.Infinite -> {
-                    setClearColor(document.background)
+                    setClearColor(docR, docG, docB, document.backgroundAlpha)
                     clear(GLFramebuffer.ClearType.Color)
                 }
             }

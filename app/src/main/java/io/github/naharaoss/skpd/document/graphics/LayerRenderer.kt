@@ -3,12 +3,11 @@ package io.github.naharaoss.skpd.document.graphics
 import android.opengl.GLES30
 import android.util.Log
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Matrix
 import io.github.naharaoss.skpd.brush.BrushType
 import io.github.naharaoss.skpd.document.DocumentAccess
 import io.github.naharaoss.skpd.utils.BlendMode
 import io.github.naharaoss.skpd.utils.GLFramebuffer
+import io.github.naharaoss.skpd.utils.Matrix4
 import io.github.naharaoss.skpd.utils.TileAddress
 import io.github.naharaoss.skpd.utils.toBlendState
 import java.nio.ByteBuffer
@@ -93,7 +92,7 @@ class LayerRenderer internal constructor(val parent: DocumentRenderer, val layer
             }
         } else {
             pendingTile.framebuffer.bind {
-                setClearColor(Color.Transparent)
+                setClearColor(0f, 0f, 0f, 0f)
                 clear(GLFramebuffer.ClearType.Color)
             }
         }
@@ -105,7 +104,7 @@ class LayerRenderer internal constructor(val parent: DocumentRenderer, val layer
             tileKey = address,
             tileRect = address.calculateTileRect(tileSize),
             framebuffer = pendingTile.framebuffer,
-            transform = Matrix().apply { scale(y = -1f) }
+            transform = Matrix4.Identity.copy(m11 = -1f)
         )
 
         GLES30.glDisable(GLES30.GL_BLEND)
@@ -153,7 +152,7 @@ class LayerRenderer internal constructor(val parent: DocumentRenderer, val layer
     internal fun render(
         tileProgram: TileProgram,
         viewport: Rect,
-        canvasTransform: Matrix,
+        canvasTransform: Matrix4,
         framebuffer: GLFramebuffer
     ) {
         if (layer.opacity == 0f) return
