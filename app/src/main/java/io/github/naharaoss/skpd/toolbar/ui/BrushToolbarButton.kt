@@ -47,11 +47,12 @@ fun BrushToolbarButton(
         FilledIconToggleButton(
             checked = brush != null && brush.id == selectedBrush?.id,
             onCheckedChange = {
+                val brushes = brushListViewModel.brushes.value
+
                 when {
                     !it -> showBrushPicker = true
-                    brush != null && selectedBrush?.id != brush.id -> documentViewModel.setBrush(
-                        brush
-                    )
+                    brush != null && selectedBrush?.id != brush.id -> documentViewModel.setBrush(brush)
+                    brush == null && !brushes.isNullOrEmpty() -> onBrushSelect(brushes.first())
                 }
             }
         ) {

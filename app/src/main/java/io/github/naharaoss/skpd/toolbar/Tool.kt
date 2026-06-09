@@ -99,7 +99,6 @@ sealed interface Tool {
     data class Brush(val brushId: Long?) : Tool {
         @Composable
         override fun ToolbarButton(modifier: Modifier, context: ToolContext) {
-            val selectedBrush by context.documentViewModel.brush.collectAsState()
             var toolBrush: BrushItem? by remember { mutableStateOf(null) }
 
             BrushToolbarButton(
@@ -117,11 +116,6 @@ sealed interface Tool {
             LaunchedEffect(brushId) {
                 val brush = brushId?.let { id -> context.brushListViewModel.getBrushById(id) }
                 toolBrush = brush
-            }
-
-            LaunchedEffect(brushId != null, selectedBrush?.id) {
-                val selectedBrush = selectedBrush
-                if (brushId == null && selectedBrush?.id != null) context.replaceTool(copy(brushId = selectedBrush.id))
             }
         }
     }
