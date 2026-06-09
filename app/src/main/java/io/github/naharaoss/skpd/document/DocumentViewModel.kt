@@ -1,5 +1,6 @@
 package io.github.naharaoss.skpd.document
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted

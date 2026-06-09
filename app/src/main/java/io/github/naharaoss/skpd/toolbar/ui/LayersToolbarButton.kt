@@ -1,4 +1,4 @@
-package io.github.naharaoss.skpd.document.ui
+package io.github.naharaoss.skpd.toolbar.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -9,10 +9,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -22,6 +25,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,47 +58,51 @@ import androidx.compose.ui.window.PopupProperties
 import io.github.naharaoss.skpd.R
 import io.github.naharaoss.skpd.document.DocumentViewModel
 import io.github.naharaoss.skpd.ui.component.FancyDialog
+import io.github.naharaoss.skpd.ui.component.SketchpadPopup
+import io.github.naharaoss.skpd.ui.component.SketchpadPopupTitleBar
 import io.github.naharaoss.skpd.utils.BlendMode
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun LayersPopupContent(
+fun LayersToolbarButton(
     modifier: Modifier = Modifier,
     documentViewModel: DocumentViewModel
 ) {
-    val layers by documentViewModel.layers.collectAsState()
-    val activeLayer by documentViewModel.activeLayer.collectAsState()
-    var editingLayerId: Any? by remember { mutableStateOf(null) }
+    var showLayerList by remember { mutableStateOf(false) }
 
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        shadowElevation = 2.dp
-    ) {
-        Column {
-            Row(
-                modifier = Modifier
-                    .padding(start = 16.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Layers",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+    Box(modifier) {
+        FilledIconToggleButton(
+            checked = showLayerList,
+            onCheckedChange = { showLayerList = it }
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.layers_24px),
+                contentDescription = "Layers"
+            )
+        }
+
+        SketchpadPopup(
+            modifier = Modifier.width(300.dp).heightIn(min = 200.dp).fillMaxHeight(0.5f),
+            visible = showLayerList,
+            onDismissRequest = { showLayerList = false },
+            titleBar = {
+                SketchpadPopupTitleBar(
+                    label = { Text("Layers") },
+                    buttons = {
+                        IconButton({ documentViewModel.addLayer() }) {
+                            Icon(
+                                painter = painterResource(R.drawable.add_24px),
+                                contentDescription = "Add layer"
+                            )
+                        }
+                    }
                 )
-
-                IconButton({ documentViewModel.addLayer() }) {
-                    Icon(
-                        painter = painterResource(R.drawable.add_24px),
-                        contentDescription = "Add layer"
-                    )
-                }
             }
-
-            HorizontalDivider(Modifier.fillMaxWidth())
+        ) {
+            val layers by documentViewModel.layers.collectAsState()
+            val activeLayer by documentViewModel.activeLayer.collectAsState()
+            var editingLayerId: Any? by remember { mutableStateOf(null) }
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),

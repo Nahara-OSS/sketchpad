@@ -63,5 +63,6 @@ class BrushListViewModel @Inject constructor(
         viewModelScope.launch { _brushes.value = brushRepository.getAll(_keyword.value) }
     }
 
+    suspend fun getBrushById(id: Long) = brushRepository.getById(id)
     suspend fun createBrush(name: String, icon: String?) = brushRepository.createBrush(name, icon, StampBrush.defaultPreset)
 }
