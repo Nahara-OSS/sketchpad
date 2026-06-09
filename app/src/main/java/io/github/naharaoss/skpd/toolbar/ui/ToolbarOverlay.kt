@@ -34,9 +34,6 @@ import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.width
-import io.github.naharaoss.skpd.brush.BrushListViewModel
-import io.github.naharaoss.skpd.document.DocumentViewModel
-import io.github.naharaoss.skpd.toolbar.Tool
 import io.github.naharaoss.skpd.toolbar.Toolbar
 import io.github.naharaoss.skpd.toolbar.ToolbarViewModel
 import kotlin.math.roundToInt
@@ -50,8 +47,6 @@ fun ToolbarOverlay(
     onCloseDocument: () -> Unit,
     undockedPadding: Dp,
     toolbarViewModel: ToolbarViewModel,
-    documentViewModel: DocumentViewModel,
-    brushListViewModel: BrushListViewModel,
     windowSizeClass: WindowSizeClass
 ) {
     val toolbars by toolbarViewModel.toolbars.collectAsState()
@@ -109,26 +104,18 @@ fun ToolbarOverlay(
                     val i = if (reversed) toolbar.tools.size - 1 - i else i
                     val (id, tool) = toolbar.tools[i]
 
-                    val context = object : Tool.ToolContext {
-                        override val documentViewModel = documentViewModel
-                        override val brushListViewModel = brushListViewModel
-                        override val windowSizeClass = windowSizeClass
-
-                        override fun replaceTool(tool: Tool) {
+                    tool.ToolbarButton(
+                        windowSizeClass = windowSizeClass,
+                        onReplaceTool = { tool ->
                             toolbarViewModel.changeToolbars(toolbars.map { tb ->
                                 if (tb.id != toolbar.id) tb
                                 else tb.copy(tools = tb.tools.map { tl ->
                                     if (tl.id == id) tl.copy(content = tool) else tl
                                 })
                             })
-                        }
-
-                        override fun closeDocument() {
-                            onCloseDocument()
-                        }
-                    }
-
-                    tool.ToolbarButton(context = context)
+                        },
+                        onCloseDocument = onCloseDocument
+                    )
                 }
             }
         }

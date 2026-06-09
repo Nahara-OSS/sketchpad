@@ -68,8 +68,6 @@ class DocumentActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     undockedPadding = 8.dp,
                     toolbarViewModel = toolbarViewModel,
-                    documentViewModel = documentViewModel,
-                    brushListViewModel = brushListViewModel,
                     windowSizeClass = windowSizeClass,
                     onCloseDocument = { finish() }
                 )
