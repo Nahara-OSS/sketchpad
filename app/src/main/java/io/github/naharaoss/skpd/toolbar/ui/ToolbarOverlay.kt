@@ -30,16 +30,15 @@ import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.min
-import androidx.compose.ui.unit.width
+import androidx.compose.ui.unit.size
 import io.github.naharaoss.skpd.toolbar.Toolbar
 import io.github.naharaoss.skpd.toolbar.ToolbarViewModel
 import kotlin.math.roundToInt
 
 private val ButtonSize = 48.dp
-private val UndockedButtonPadding = 4.dp
+private val ContentPadding = 4.dp
 
 @Composable
 fun ToolbarOverlay(
@@ -81,14 +80,13 @@ fun ToolbarOverlay(
             val primaryAxis = ButtonSize * info.tools.size
             val secondaryAxis = ButtonSize
             val contentSize = if (info.side.orientation == Toolbar.Orientation.Horizontal) DpSize(primaryAxis, secondaryAxis) else DpSize(secondaryAxis, primaryAxis)
-            val totalSize = if (info.docked) contentSize else DpSize(contentSize.width + UndockedButtonPadding * 2, contentSize.height + UndockedButtonPadding * 2)
+            val totalSize = DpSize(contentSize.width + ContentPadding * 2, contentSize.height + ContentPadding * 2)
             ToolbarInfo(info.side, info.position, info.docked, totalSize)
         },
         undockedPadding = undockedPadding
     ) { id ->
         val toolbar = toolbarMap[id]!!
         val elevation by animateDpAsState(targetValue = if (toolbar.docked) 0.dp else 2.dp)
-        val padding by animateDpAsState(targetValue = if (toolbar.docked) 0.dp else UndockedButtonPadding)
 
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -97,7 +95,7 @@ fun ToolbarOverlay(
             shape = CircleShape
         ) {
             ToolbarFlow(
-                modifier = Modifier.padding(padding),
+                modifier = Modifier.padding(ContentPadding),
                 orientation = toolbar.side.orientation
             ) { reversed ->
                 for (i in toolbar.tools.indices) {
@@ -264,12 +262,10 @@ fun <K> ToolbarOverlayLayout(
                 val rect = rect.toRotatedRect()
                 val x by animateDpAsState(targetValue = rect.left)
                 val y by animateDpAsState(targetValue = rect.top)
-                val w by animateDpAsState(targetValue = rect.width)
-                val h by animateDpAsState(targetValue = rect.height)
 
                 Box(Modifier
                     .absoluteOffset { IntOffset(x.toPx().roundToInt(), y.toPx().roundToInt()) }
-                    .size(w, h)) {
+                    .size(rect.size)) {
                     content(key)
                 }
             }
