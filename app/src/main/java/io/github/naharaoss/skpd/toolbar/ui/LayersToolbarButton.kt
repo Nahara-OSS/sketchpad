@@ -9,32 +9,27 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconToggleButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -54,8 +49,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
 import io.github.naharaoss.skpd.R
 import io.github.naharaoss.skpd.document.DocumentViewModel
 import io.github.naharaoss.skpd.ui.component.FancyDialog
@@ -193,27 +186,18 @@ fun LayersToolbarButton(
                                 supportingContent = { Text("${(layer.opacity * 100f).roundToInt()}%") },
                                 leadingContent = { Icon(painterResource(R.drawable.opacity_24px), null) },
                                 trailingContent = {
-                                    if (showOpacitySlider) {
+                                    SketchpadPopup(
+                                        visible = showOpacitySlider,
+                                        onDismissRequest = { showOpacitySlider = false }
+                                    ) {
                                         var opacity by remember(layer.opacity) { mutableFloatStateOf(layer.opacity) }
 
-                                        Popup(
-                                            onDismissRequest = { showOpacitySlider = false },
-                                            properties = PopupProperties(focusable = true)
-                                        ) {
-                                            Surface(
-                                                shadowElevation = 2.dp,
-                                                shape = RoundedCornerShape(16.dp)
-                                            ) {
-                                                Slider(
-                                                    modifier = Modifier
-                                                        .widthIn(max = 300.dp)
-                                                        .padding(16.dp),
-                                                    value = opacity,
-                                                    onValueChange = { opacity = it },
-                                                    onValueChangeFinished = { documentViewModel.editLayer(layer, opacity = opacity) }
-                                                )
-                                            }
-                                        }
+                                        Slider(
+                                            modifier = Modifier.widthIn(max = 300.dp).padding(16.dp),
+                                            value = opacity,
+                                            onValueChange = { opacity = it },
+                                            onValueChangeFinished = { documentViewModel.editLayer(layer, opacity = opacity) }
+                                        )
                                     }
                                 }
                             )
