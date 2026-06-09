@@ -1,39 +1,64 @@
+<img
+  alt="Nahara&#39;s Sketchpad App Icon"
+  height="256"
+  src="./app/src/main/ic_launcher-playstore.png">
+
 # Nahara's Sketchpad
 
-Companion sketching app for, well, sketching!.
+Companion sketching app for, well, sketching!
 
-Nahara's Sketchpad is not an all-in-one drawing app - the main purpose is to offer a sketching pad
-for you to draw on, then later transfer your sketches to fully featured drawing app, like Krita for
-example. That means Sketchpad does not have powerful brush engine, filters, advanced editing tools
-or anything you'd typically see in professional drawing apps. In fact, we encourage you to use this
-app together with your favorite drawing app of your choice, rather than doubling down on this one
-single app.
+Welcome to the source code repository for Nahara's Sketchpad! This repository
+houses the app, as well as additional documentations related to Sketchpad, such
+as internal file format, app data organization and more.
 
-## Features
+## Links
 
-- **Infinite canvas** (with caveat): Never have to worry about running out of sketching area - just
-  sketch.
+- [Source code][source]
+- [License][license]
+- [Issues][issues]
+- [Using Nahara's Sketchpad inside emulator](./docs/EMULATOR.md)
 
-> [!WARNING]
-> Infinite canvas isn't really "infinite" as there is a limitation on how big the device can hold
-> the data. We tried our best not to fill up the system memory, but there is still a possibility the
-> app can crash during usage. For the most optimal experience, consider monitoring your system
-> memory, clean up storage space and fine-tune the settings.
+## About Sketchpad
 
-## Future
+Nahara's Sketchpad is a companion sketching app for your pen-enabled Android
+tablet and phone. Quickly open and sketch when idea arrives, and continue your
+idea in other apps with multi-layered PSD and OpenRaster (.ora) exports.
 
-Whether these ideas will be implemented in the future is still unknown:
+- **Infinite raster canvas**: Powered by tile-based system, Sketchpad
+  dynamically expands the canvas to capture your brush strokes, so you can focus
+  on sketching and exploring your ideas without having to worry about document
+  boundaries or running out of space.
 
-- **Nahara's Certified Sketchpad**: Devices with this certification have the app settings fine-tuned
-  in order to perform and provide the best experience on certified devices. Right now this is just a
-  plan for future.
-- **Nahara's Canvas**: A more featured version of Sketchpad that runs on mobile (Android) and
-  desktop (Windows and Linux with Wayland). Powered by [Nahara's Magic Brush Engine][magic-brush].
+- **GPU-accelerated brush engine**: Take advantage of the device's powerful GPU
+  to achieve lower brush lag and power consumption compared to traditional
+  CPU-based brush engines.
+
+- **Customizable brushes**: Featuring stamp-based and strip-based brushes, you
+  can make your own brush from parameters that can react to stylus pressure and
+  tilt, or explore premade brushes that are ready for use right away.
+
+- **Customizable toolbars**: Make Sketchpad yours by configuring and arranging
+  toolbars to your own liking, such as move brush toolbar to the right for
+  left-handed usage, or combine docked top toolbars and dark theme to hide the
+  camera cutouts.
+
+- **100% free**: No ads, no subscriptions, no hidden paywalls and no
+  installation fee. Sketchpad is entierly free for use for everything from
+  casual doodling to professional works with zero royalty fees.
+
+- **Offline access**: Fully functional offline with no internet access required,
+  allowing you to take your sketchpad with you anywhere you go.
+
+Sketchpad is an open-source software licensed under the [MIT License][license].
+Visit the [source code repository][source] for technical documentation or
+contribute to the project, or visit the [public bug tracker][issues] to report
+bugs.
 
 ## License
 
 Nahara's Sketchpad is licensed under [MIT License][license].
 
-[issues]: http://about:blank
+[source]: https://github.com/Nahara-OSS/sketchpad
+[issues]: https://github.com/Nahara-OSS/sketchpad/issues
 [magic-brush]: http://github.com/Nahara-OSS/magic-brush
 [license]: ./LICENSE
