@@ -16,7 +16,7 @@ as internal file format, app data organization and more.
 - [Source code][source]
 - [License][license]
 - [Issues][issues]
-- [Using Nahara's Sketchpad inside emulator](./docs/EMULATOR.md)
+- [Using Nahara's Sketchpad on computer](./docs/EMULATOR.md)
 
 ## About Sketchpad
 
