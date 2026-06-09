@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.AbsoluteAlignment
@@ -36,6 +37,7 @@ import io.github.naharaoss.skpd.brush.BrushListViewModel
 import io.github.naharaoss.skpd.document.DocumentViewModel
 import io.github.naharaoss.skpd.toolbar.Tool
 import io.github.naharaoss.skpd.toolbar.Toolbar
+import io.github.naharaoss.skpd.toolbar.ToolbarViewModel
 import kotlin.math.roundToInt
 
 private val ButtonSize = 48.dp
@@ -43,14 +45,14 @@ private val ButtonSize = 48.dp
 @Composable
 fun ToolbarOverlay(
     modifier: Modifier = Modifier,
-    toolbars: List<Toolbar>,
-    onToolbarsChange: (List<Toolbar>) -> Unit,
     onCloseDocument: () -> Unit,
     undockedPadding: Dp,
+    toolbarViewModel: ToolbarViewModel,
     documentViewModel: DocumentViewModel,
     brushListViewModel: BrushListViewModel,
     windowSizeClass: WindowSizeClass
 ) {
+    val toolbars by toolbarViewModel.toolbars.collectAsState()
     val toolbarMap = toolbars.associateBy { it.id }
     val rotation = LocalView.current.display.rotation
 
@@ -109,7 +111,7 @@ fun ToolbarOverlay(
                         override val windowSizeClass = windowSizeClass
 
                         override fun replaceTool(tool: Tool) {
-                            onToolbarsChange(toolbars.map { tb ->
+                            toolbarViewModel.changeToolbars(toolbars.map { tb ->
                                 if (tb.id != toolbar.id) tb
                                 else tb.copy(tools = tb.tools.map { tl ->
                                     if (tl.id == id) tl.copy(content = tool) else tl

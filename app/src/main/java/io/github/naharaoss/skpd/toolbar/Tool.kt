@@ -40,15 +40,6 @@ sealed interface Tool {
         fun closeDocument()
     }
 
-    companion object {
-        val DefaultTools = listOf(
-            Exit,
-            ResetTransform,
-            Layers,
-            Brush(null)
-        )
-    }
-
     @Serializable
     @SerialName("exit")
     object Exit : Tool {
@@ -58,6 +49,68 @@ sealed interface Tool {
                 Icon(
                     painter = painterResource(R.drawable.arrow_back_24px),
                     contentDescription = "Go back"
+                )
+            }
+        }
+    }
+
+    @Serializable
+    @SerialName("undo")
+    object Undo : Tool {
+        @Composable
+        override fun ToolbarButton(modifier: Modifier, context: ToolContext) {
+            IconButton({}) {
+                Icon(
+                    painter = painterResource(R.drawable.undo_24px),
+                    contentDescription = "Undo"
+                )
+            }
+        }
+    }
+
+    @Serializable
+    @SerialName("redo")
+    object Redo : Tool {
+        @Composable
+        override fun ToolbarButton(modifier: Modifier, context: ToolContext) {
+            IconButton({}) {
+                Icon(
+                    painter = painterResource(R.drawable.redo_24px),
+                    contentDescription = "Redo"
+                )
+            }
+        }
+    }
+
+    @Serializable
+    @SerialName("color-picker")
+    object ColorPicker : Tool {
+        @Composable
+        override fun ToolbarButton(modifier: Modifier, context: ToolContext) {
+            FilledIconToggleButton(
+                checked = false,
+                onCheckedChange = {}
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.palette_24px),
+                    contentDescription = "Color picker"
+                )
+            }
+        }
+    }
+
+    @Serializable
+    @SerialName("color-sampler")
+    object ColorSampler : Tool {
+        @Composable
+        override fun ToolbarButton(modifier: Modifier, context: ToolContext) {
+            FilledIconToggleButton(
+                checked = false,
+                onCheckedChange = {}
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.colorize_24px),
+                    contentDescription = "Color picker"
                 )
             }
         }
@@ -91,6 +144,23 @@ sealed interface Tool {
                 modifier = modifier,
                 documentViewModel = context.documentViewModel
             )
+        }
+    }
+
+    @Serializable
+    @SerialName("menu")
+    object Menu : Tool {
+        @Composable
+        override fun ToolbarButton(modifier: Modifier, context: ToolContext) {
+            FilledIconToggleButton(
+                checked = false,
+                onCheckedChange = {}
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.menu_24px),
+                    contentDescription = "Menu"
+                )
+            }
         }
     }
 

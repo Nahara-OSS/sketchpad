@@ -15,7 +15,6 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -24,11 +23,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.naharaoss.skpd.brush.BrushListViewModel
 import io.github.naharaoss.skpd.document.ui.RegularDocumentView
-import io.github.naharaoss.skpd.toolbar.Tool
-import io.github.naharaoss.skpd.toolbar.Toolbar
+import io.github.naharaoss.skpd.toolbar.ToolbarViewModel
 import io.github.naharaoss.skpd.toolbar.ui.ToolbarOverlay
 import io.github.naharaoss.skpd.ui.theme.SketchpadTheme
-import java.util.UUID
 
 /**
  * The activity for Sketchpad documents. Open this activity with document UID to open existing
@@ -37,6 +34,7 @@ import java.util.UUID
 @AndroidEntryPoint
 class DocumentActivity : ComponentActivity() {
     private val brushListViewModel: BrushListViewModel by viewModels()
+    private val toolbarViewModel: ToolbarViewModel by viewModels()
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalGridApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,41 +54,6 @@ class DocumentActivity : ComponentActivity() {
             val windowSizeClass = calculateWindowSizeClass(this)
             var showBrushList by remember { mutableStateOf(false) }
 
-            var toolbars by rememberSerializable {
-                mutableStateOf(listOf(
-                    Toolbar(
-                        id = UUID.randomUUID(),
-                        side = Toolbar.Side.Top,
-                        position = Toolbar.Position.Start,
-                        docked = true,
-                        tools = listOf(
-                            Toolbar.ToolInfo(UUID.randomUUID(), Tool.Exit)
-                        )
-                    ),
-                    Toolbar(
-                        id = UUID.randomUUID(),
-                        side = Toolbar.Side.Top,
-                        position = Toolbar.Position.End,
-                        docked = true,
-                        tools = listOf(
-                            Toolbar.ToolInfo(UUID.randomUUID(), Tool.ResetTransform),
-                            Toolbar.ToolInfo(UUID.randomUUID(), Tool.Layers)
-                        )
-                    ),
-                    Toolbar(
-                        id = UUID.randomUUID(),
-                        side = Toolbar.Side.Left,
-                        position = Toolbar.Position.Center,
-                        docked = false,
-                        tools = listOf(
-                            Toolbar.ToolInfo(UUID.randomUUID(), Tool.Brush(null)),
-                            Toolbar.ToolInfo(UUID.randomUUID(), Tool.Brush(null)),
-                            Toolbar.ToolInfo(UUID.randomUUID(), Tool.Brush(null))
-                        )
-                    )
-                ))
-            }
-
             BackHandler(enabled = showBrushList) {
                 showBrushList = false
             }
@@ -103,9 +66,8 @@ class DocumentActivity : ComponentActivity() {
 
                 ToolbarOverlay(
                     modifier = Modifier.fillMaxSize(),
-                    toolbars = toolbars,
-                    onToolbarsChange = { toolbars = it },
                     undockedPadding = 8.dp,
+                    toolbarViewModel = toolbarViewModel,
                     documentViewModel = documentViewModel,
                     brushListViewModel = brushListViewModel,
                     windowSizeClass = windowSizeClass,
