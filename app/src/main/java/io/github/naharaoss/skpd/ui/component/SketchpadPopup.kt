@@ -22,8 +22,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 
 @Composable
@@ -44,6 +49,7 @@ fun SketchpadPopup(
     if (transitionState.currentState || transitionState.targetState) {
         Popup(
             onDismissRequest = onDismissRequest,
+            popupPositionProvider = SketchpadPopupPositionProvider,
             properties = PopupProperties(focusable = true)
         ) {
             SketchpadPopupContent(
@@ -56,6 +62,40 @@ fun SketchpadPopup(
                 content = content
             )
         }
+    }
+}
+
+object SketchpadPopupPositionProvider : PopupPositionProvider {
+    override fun calculatePosition(
+        anchorBounds: IntRect,
+        windowSize: IntSize,
+        layoutDirection: LayoutDirection,
+        popupContentSize: IntSize
+    ): IntOffset {
+        val possiblePositions = listOf(
+            IntOffset(anchorBounds.center.x - popupContentSize.width / 2, anchorBounds.bottom),
+            IntOffset(anchorBounds.center.x - popupContentSize.width / 2, anchorBounds.top - popupContentSize.height),
+            IntOffset(anchorBounds.right, anchorBounds.center.y - popupContentSize.height / 2),
+            IntOffset(anchorBounds.left - popupContentSize.width, anchorBounds.center.y - popupContentSize.height / 2),
+            IntOffset(anchorBounds.left, anchorBounds.bottom),
+            IntOffset(anchorBounds.right - popupContentSize.width, anchorBounds.bottom),
+            IntOffset(anchorBounds.left, anchorBounds.top - popupContentSize.height),
+            IntOffset(anchorBounds.right - popupContentSize.width, anchorBounds.top - popupContentSize.height),
+            IntOffset(anchorBounds.right, anchorBounds.top),
+            IntOffset(anchorBounds.right, anchorBounds.bottom - popupContentSize.height),
+            IntOffset(anchorBounds.left - popupContentSize.width, anchorBounds.top),
+            IntOffset(anchorBounds.left - popupContentSize.width, anchorBounds.bottom - popupContentSize.height)
+        )
+
+        return possiblePositions
+            .find { offset ->
+                val rect = IntRect(offset = offset, size = popupContentSize)
+                rect.left >= 0 && rect.right <= windowSize.width && rect.top >= 0 && rect.bottom <= windowSize.height
+            } ?: when {
+                (0..windowSize.width  / 3).contains(anchorBounds.center.x) -> anchorBounds.centerRight
+                (windowSize.width / 3..windowSize.width * 2 / 3).contains(anchorBounds.center.x) -> anchorBounds.centerLeft
+                else -> anchorBounds.center
+            }
     }
 }
 
