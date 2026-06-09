@@ -64,8 +64,8 @@ fun BrushToolbarButton(
 
         SketchpadPopup(
             modifier = Modifier
-                .widthIn(max = if (compact) 400.dp else 600.dp)
-                .heightIn(min = 200.dp)
+                .widthIn(max = if (compact) 400.dp else 500.dp)
+                .heightIn(max = 800.dp)
                 .fillMaxHeight(0.8f),
             visible = showBrushPicker,
             onDismissRequest = { showBrushPicker = false },
