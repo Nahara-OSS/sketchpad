@@ -64,7 +64,7 @@ class DocumentActivity : ComponentActivity() {
                         position = Toolbar.Position.Start,
                         docked = true,
                         tools = listOf(
-                            Tool.Exit
+                            Toolbar.ToolInfo(UUID.randomUUID(), Tool.Exit)
                         )
                     ),
                     Toolbar(
@@ -73,8 +73,8 @@ class DocumentActivity : ComponentActivity() {
                         position = Toolbar.Position.End,
                         docked = true,
                         tools = listOf(
-                            Tool.ResetTransform,
-                            Tool.Layers
+                            Toolbar.ToolInfo(UUID.randomUUID(), Tool.ResetTransform),
+                            Toolbar.ToolInfo(UUID.randomUUID(), Tool.Layers)
                         )
                     ),
                     Toolbar(
@@ -83,9 +83,9 @@ class DocumentActivity : ComponentActivity() {
                         position = Toolbar.Position.Center,
                         docked = false,
                         tools = listOf(
-                            Tool.Brush(null),
-                            Tool.Brush(null),
-                            Tool.Brush(null)
+                            Toolbar.ToolInfo(UUID.randomUUID(), Tool.Brush(null)),
+                            Toolbar.ToolInfo(UUID.randomUUID(), Tool.Brush(null)),
+                            Toolbar.ToolInfo(UUID.randomUUID(), Tool.Brush(null))
                         )
                     )
                 ))

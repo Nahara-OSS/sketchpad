@@ -11,8 +11,14 @@ data class Toolbar(
     val side: Side,
     val position: Position,
     val docked: Boolean,
-    val tools: List<Tool>
+    val tools: List<ToolInfo>
 ) {
+    @Serializable
+    data class ToolInfo(
+        @Serializable(with = UUIDSerializer::class) val id: UUID,
+        val content: Tool
+    )
+
     @Serializable
     enum class Side(val orientation: Orientation) {
         @SerialName("top") Top(Orientation.Horizontal),

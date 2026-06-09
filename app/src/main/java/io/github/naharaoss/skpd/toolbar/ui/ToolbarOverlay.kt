@@ -36,7 +36,6 @@ import io.github.naharaoss.skpd.brush.BrushListViewModel
 import io.github.naharaoss.skpd.document.DocumentViewModel
 import io.github.naharaoss.skpd.toolbar.Tool
 import io.github.naharaoss.skpd.toolbar.Toolbar
-import io.github.naharaoss.skpd.utils.replaceAt
 import kotlin.math.roundToInt
 
 private val ButtonSize = 48.dp
@@ -102,7 +101,7 @@ fun ToolbarOverlay(
             ) { reversed ->
                 for (i in toolbar.tools.indices) {
                     val i = if (reversed) toolbar.tools.size - 1 - i else i
-                    val tool = toolbar.tools[i]
+                    val (id, tool) = toolbar.tools[i]
 
                     val context = object : Tool.ToolContext {
                         override val documentViewModel = documentViewModel
@@ -110,8 +109,12 @@ fun ToolbarOverlay(
                         override val windowSizeClass = windowSizeClass
 
                         override fun replaceTool(tool: Tool) {
-                            val toolbars = toolbars.map { if (it.id == toolbar.id) it.copy(tools = it.tools.replaceAt(i, tool)) else it }
-                            onToolbarsChange(toolbars)
+                            onToolbarsChange(toolbars.map { tb ->
+                                if (tb.id != toolbar.id) tb
+                                else tb.copy(tools = tb.tools.map { tl ->
+                                    if (tl.id == id) tl.copy(content = tool) else tl
+                                })
+                            })
                         }
 
                         override fun closeDocument() {
