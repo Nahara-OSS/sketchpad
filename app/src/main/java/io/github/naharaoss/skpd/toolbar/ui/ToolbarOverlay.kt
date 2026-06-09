@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +42,7 @@ import io.github.naharaoss.skpd.toolbar.ToolbarViewModel
 import kotlin.math.roundToInt
 
 private val ButtonSize = 48.dp
+private val UndockedButtonPadding = 4.dp
 
 @Composable
 fun ToolbarOverlay(
@@ -84,12 +86,14 @@ fun ToolbarOverlay(
             val primaryAxis = ButtonSize * info.tools.size
             val secondaryAxis = ButtonSize
             val contentSize = if (info.side.orientation == Toolbar.Orientation.Horizontal) DpSize(primaryAxis, secondaryAxis) else DpSize(secondaryAxis, primaryAxis)
-            ToolbarInfo(info.side, info.position, info.docked, contentSize)
+            val totalSize = if (info.docked) contentSize else DpSize(contentSize.width + UndockedButtonPadding * 2, contentSize.height + UndockedButtonPadding * 2)
+            ToolbarInfo(info.side, info.position, info.docked, totalSize)
         },
         undockedPadding = undockedPadding
     ) { id ->
         val toolbar = toolbarMap[id]!!
         val elevation by animateDpAsState(targetValue = if (toolbar.docked) 0.dp else 2.dp)
+        val padding by animateDpAsState(targetValue = if (toolbar.docked) 0.dp else UndockedButtonPadding)
 
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -98,7 +102,7 @@ fun ToolbarOverlay(
             shape = CircleShape
         ) {
             ToolbarFlow(
-                modifier = Modifier,
+                modifier = Modifier.padding(padding),
                 orientation = toolbar.side.orientation
             ) { reversed ->
                 for (i in toolbar.tools.indices) {
@@ -273,10 +277,12 @@ fun <K> ToolbarOverlayLayout(
                 val rect = rect.toRotatedRect()
                 val x by animateDpAsState(targetValue = rect.left)
                 val y by animateDpAsState(targetValue = rect.top)
+                val w by animateDpAsState(targetValue = rect.width)
+                val h by animateDpAsState(targetValue = rect.height)
 
                 Box(Modifier
                     .absoluteOffset { IntOffset(x.toPx().roundToInt(), y.toPx().roundToInt()) }
-                    .size(width = rect.width, height = rect.height)) {
+                    .size(w, h)) {
                     content(key)
                 }
             }
