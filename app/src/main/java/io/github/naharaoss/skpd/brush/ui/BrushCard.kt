@@ -31,6 +31,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.naharaoss.skpd.R
 import io.github.naharaoss.skpd.brush.BrushType
+import io.github.naharaoss.skpd.brush.graphics.BrushPreviewRenderer
+import io.github.naharaoss.skpd.brush.graphics.rememberBrushPreviewRenderer
 import io.github.naharaoss.skpd.ui.component.resourceIdFromNamedIcon
 import kotlinx.coroutines.delay
 
@@ -38,6 +40,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun BrushCard(
     modifier: Modifier = Modifier,
+    brushPreviewRenderer: BrushPreviewRenderer = rememberBrushPreviewRenderer(),
     preset: BrushType.Preset?,
     enabled: Boolean = true,
     favorite: Boolean,
@@ -96,6 +99,7 @@ fun BrushCard(
 
                     else -> BrushPreview(
                         modifier = Modifier.fillMaxSize().padding(16.dp),
+                        brushPreviewRenderer = brushPreviewRenderer,
                         preset = preset
                     )
                 }

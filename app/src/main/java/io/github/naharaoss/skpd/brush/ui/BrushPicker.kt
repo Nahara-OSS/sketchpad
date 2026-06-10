@@ -47,6 +47,7 @@ import androidx.lifecycle.viewmodel.compose.rememberViewModelStoreOwner
 import io.github.naharaoss.skpd.R
 import io.github.naharaoss.skpd.brush.BrushListViewModel
 import io.github.naharaoss.skpd.brush.BrushPresetViewModel
+import io.github.naharaoss.skpd.brush.graphics.rememberBrushPreviewRenderer
 import io.github.naharaoss.skpd.resource.BrushItem
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -61,6 +62,7 @@ fun BrushPicker(
     onAddBrush: (() -> Unit)? = null,
     onBrushSelect: (BrushItem) -> Unit
 ) {
+    val brushPreviewRenderer = rememberBrushPreviewRenderer()
     val dir = LocalLayoutDirection.current
     val brushes by listViewModel.brushes.collectAsState()
     val keyword by listViewModel.keyword.collectAsState()
@@ -193,6 +195,7 @@ fun BrushPicker(
 
                             BrushCard(
                                 modifier = Modifier.height(96.dp),
+                                brushPreviewRenderer = brushPreviewRenderer,
                                 selected = selected?.id == brush.id,
                                 onBrushClick = { onBrushSelect(brush) },
                                 onIconClick = {},
@@ -200,7 +203,7 @@ fun BrushPicker(
                                 iconId = brush.icon,
                                 preset = preset,
                                 favorite = false,
-                                onFavoriteChange = {},
+                                onFavoriteChange = {}
                             )
                         }
 
