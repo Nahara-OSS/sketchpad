@@ -2,30 +2,34 @@ package io.github.naharaoss.skpd.resource
 
 import io.github.naharaoss.skpd.brush.BrushType
 import io.github.naharaoss.skpd.utils.ApplicationScope
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import java.util.concurrent.locks.ReentrantLock
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.concurrent.withLock
+import kotlin.time.Duration.Companion.milliseconds
 
 @Singleton
 class BrushRepository @Inject constructor(
     private val dao: AppDatabase.BrushDao,
     private val store: ResourceContentStore,
+    @param:ApplicationScope private val scope: CoroutineScope
 ) {
     private val _addition = MutableSharedFlow<BrushItem>()
     private val _removal = MutableSharedFlow<BrushItem>()
     private val _update = MutableSharedFlow<BrushItem>()
     private val _presetUpdate = MutableSharedFlow<BrushItem>()
+    private val cachedPresets = mutableMapOf<Long, Pair<Int, BrushType.Preset?>>()
+    private val cacheRemoveJob = mutableMapOf<Long, Job>()
+    private val presetCacheLock = ReentrantLock()
     val addition = _addition.asSharedFlow()
     val removal = _removal.asSharedFlow()
     val update = _update.asSharedFlow()
@@ -66,16 +70,63 @@ class BrushRepository @Inject constructor(
     }
 
     suspend fun getPreset(item: BrushItem): BrushType.Preset {
+        val p = cachedPresets[item.id]
+        if (p?.second != null) return p.second!!
+
         val dbItem = dao.getById(item.id)
         val brushRoot = store.referenceRootOf(dbItem.reference)
-        return withContext(Dispatchers.IO) { brushRoot.loadBrushPresetFromFolder() }
+        val preset = withContext(Dispatchers.IO) { brushRoot.loadBrushPresetFromFolder() }
+
+        if (p != null) {
+            presetCacheLock.withLock {
+                cachedPresets[item.id]?.let {
+                    cachedPresets[item.id] = it.copy(second = preset)
+                }
+            }
+        }
+
+        return preset
     }
 
     suspend fun changePreset(item: BrushItem, preset: BrushType.Preset) {
+        presetCacheLock.withLock {
+            cachedPresets.computeIfPresent(item.id) { _, p -> p.copy(second = preset) }
+        }
+
         val dbItem = dao.getById(item.id)
         val brushRoot = store.referenceRootOf(dbItem.reference)
         withContext(Dispatchers.IO) { brushRoot.storeBrushPresetToFolder(preset) }
         _presetUpdate.emit(item)
+    }
+
+    fun cachePreset(item: BrushItem) = object : AutoCloseable {
+        init {
+            presetCacheLock.withLock {
+                val pair = cachedPresets.getOrPut(item.id, { Pair(0, null) })
+                cachedPresets[item.id] = pair.copy(first = pair.first + 1)
+                cacheRemoveJob.remove(item.id)?.cancel()
+            }
+        }
+
+        override fun close() {
+            val ref = presetCacheLock.withLock {
+                val pair = cachedPresets[item.id] ?: return@withLock 0
+                val ref = pair.first - 1
+                cachedPresets[item.id] = pair.copy(first = ref)
+                ref
+            }
+
+            if (ref == 0) {
+                val job = scope.launch {
+                    delay(5000.milliseconds)
+                    presetCacheLock.withLock { cachedPresets.remove(item.id) }
+                }
+
+                presetCacheLock.withLock {
+                    cacheRemoveJob[item.id] = job
+                }
+            }
+        }
     }
 
     suspend fun renameBrush(item: BrushItem, name: String): BrushItem {

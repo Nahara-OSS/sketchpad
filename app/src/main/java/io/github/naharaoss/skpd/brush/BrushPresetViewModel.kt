@@ -24,6 +24,8 @@ class BrushPresetViewModel @AssistedInject constructor(
     val preset = _preset.asStateFlow()
 
     init {
+        addCloseable(brushRepository.cachePreset(brush))
+
         viewModelScope.launch {
             _preset.value = brushRepository.getPreset(brush)
         }
