@@ -39,6 +39,11 @@ Note that the name of AVD only contains `[A-Za-z0-9_]` characters. For example,
 if the display name of AVD inside Android Studio is `Resizable (Experimental)`,
 the flag to pass to CLI is `-avd Resizable_Experimental`.
 
+Also please note that the base AOSP image might not provide tilt direction
+data. You might need the system image with Google Play Service so that the app
+can receive tilt direction data through `MotionEvent` (or any system image that
+fill this missing data probably).
+
 ### GPU acceleration
 
 Nahara's Sketchpad uses OpenGL ES 3.0 for canvas rendering and brush engines,
