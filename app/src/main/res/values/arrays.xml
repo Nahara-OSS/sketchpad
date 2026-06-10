@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="document_no_ref_content">
+        <item>Sketchpad does not know where to look for document to open!</item>
+        <item>To open a document stored inside Sketchpad, provide "documentId" extra field with the ID of the document.</item>
+        <item>To open from a URI, simply pass in the URI when creating intent.</item>
+    </string-array>
+</resources>

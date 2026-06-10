@@ -7,9 +7,13 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalGridApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.getValue
@@ -17,14 +21,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import io.github.naharaoss.skpd.R
 import io.github.naharaoss.skpd.brush.BrushListViewModel
 import io.github.naharaoss.skpd.document.ui.RegularDocumentView
 import io.github.naharaoss.skpd.toolbar.ToolbarViewModel
 import io.github.naharaoss.skpd.toolbar.ui.ToolbarOverlay
+import io.github.naharaoss.skpd.ui.component.FancyDialog
+import io.github.naharaoss.skpd.ui.component.FancyDialogText
 import io.github.naharaoss.skpd.ui.theme.SketchpadTheme
 
 /**
@@ -43,7 +52,27 @@ class DocumentActivity : ComponentActivity() {
 
         val documentRef = when {
             intent.hasExtra(EXTRA_DOCUMENT_ID) -> DocumentViewModel.DocumentRef.Local(intent.getLongExtra(EXTRA_DOCUMENT_ID, -1))
-            else -> throw Exception("Don't know where to open document")
+            else -> {
+                setContent {
+                    SketchpadTheme {
+                        FancyDialog(
+                            onDismissRequest = { finish() },
+                            icon = { Icon(painterResource(R.drawable.question_mark_24px), null) },
+                            title = { Text("No document") }
+                        ) {
+                            FancyDialogText {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    for (line in stringArrayResource(R.array.document_no_ref_content)) {
+                                        Text(line)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return
+            }
         }
 
         window.isNavigationBarContrastEnforced = false
