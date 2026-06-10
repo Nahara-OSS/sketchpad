@@ -3,7 +3,6 @@ package io.github.naharaoss.skpd.brush.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -13,15 +12,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -30,7 +24,6 @@ import io.github.naharaoss.skpd.R
 import io.github.naharaoss.skpd.brush.impl.StampBrush
 import io.github.naharaoss.skpd.utils.GraphEditor
 import kotlin.math.abs
-import kotlin.math.pow
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -38,7 +31,7 @@ import kotlin.math.roundToInt
 fun StampPresetEditor(
     modifier: Modifier = Modifier,
     preset: StampBrush.Preset,
-    onPresetChange: (StampBrush.Preset) -> Unit,
+    onPresetChange: ((StampBrush.Preset) -> StampBrush.Preset) -> Unit,
     onPresetChangeFinished: () -> Unit,
     onDynamicEditor: (String) -> Unit
 ) {
@@ -60,13 +53,15 @@ fun StampPresetEditor(
                         shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
                         checked = preset.tip is StampBrush.Preset.BrushTip.Circle,
                         onCheckedChange = {
-                            onPresetChange(preset.copy(tip = when (preset.tip) {
-                                is StampBrush.Preset.BrushTip.Simple -> StampBrush.Preset.BrushTip.Circle(
-                                    falloff = preset.tip.falloff,
-                                    scaleX = preset.tip.scaleX,
-                                    scaleY = preset.tip.scaleY
-                                )
-                            }))
+                            onPresetChange { preset ->
+                                preset.copy(tip = when (preset.tip) {
+                                    is StampBrush.Preset.BrushTip.Simple -> StampBrush.Preset.BrushTip.Circle(
+                                        falloff = preset.tip.falloff,
+                                        scaleX = preset.tip.scaleX,
+                                        scaleY = preset.tip.scaleY
+                                    )
+                                })
+                            }
                             onPresetChangeFinished()
                         },
                         content = { Text("Circle") }
@@ -77,13 +72,15 @@ fun StampPresetEditor(
                         shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
                         checked = preset.tip is StampBrush.Preset.BrushTip.Square,
                         onCheckedChange = {
-                            onPresetChange(preset.copy(tip = when (preset.tip) {
-                                is StampBrush.Preset.BrushTip.Simple -> StampBrush.Preset.BrushTip.Square(
-                                    falloff = preset.tip.falloff,
-                                    scaleX = preset.tip.scaleX,
-                                    scaleY = preset.tip.scaleY
-                                )
-                            }))
+                            onPresetChange { preset ->
+                                preset.copy(tip = when (preset.tip) {
+                                    is StampBrush.Preset.BrushTip.Simple -> StampBrush.Preset.BrushTip.Square(
+                                        falloff = preset.tip.falloff,
+                                        scaleX = preset.tip.scaleX,
+                                        scaleY = preset.tip.scaleY
+                                    )
+                                })
+                            }
                             onPresetChangeFinished()
                         },
                         content = { Text("Square") }
@@ -97,19 +94,14 @@ fun StampPresetEditor(
             ) {
                 when (preset.tip) {
                     is StampBrush.Preset.BrushTip.Simple -> {
-                        var decoupledGraph by remember(preset.tip.javaClass) { mutableStateOf(preset.tip.falloff) }
-
                         GraphEditor(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp),
+                            modifier = Modifier.fillMaxWidth().height(200.dp),
                             enabled = true,
                             xAxisLabel = { Text("Distance") },
                             yAxisLabel = { Text("Opacity") },
-                            graph = decoupledGraph,
-                            onGraphChange = {
-                                decoupledGraph = it
-                                onPresetChange(preset.copy(tip = preset.tip.copyToSimple(falloff = it)))
+                            graph = preset.tip.falloff,
+                            onGraphChange = { graph ->
+                                onPresetChange { preset -> if (preset.tip is StampBrush.Preset.BrushTip.Simple) preset.copy(tip = preset.tip.copyToSimple(falloff = graph)) else preset }
                                 onPresetChangeFinished()
                             }
                         )
@@ -119,98 +111,64 @@ fun StampPresetEditor(
         }
 
         BrushSliderParameter(
-            icon = { Icon(painterResource(R.drawable.edit_24px), "Spacing") },
+            icon = { Icon(painterResource(R.drawable.animation_24px), "Spacing") },
             label = { Text("Spacing") },
-            formatValue = {
-                when {
-                    preset.spacing > 0 -> Text("${if (it < 10) "%.2f".format(it) else it.roundToInt()} pixels")
-                    preset.spacing < 0 -> Text("${(it * 100).roundToInt()}%")
-                }
-            },
+            formatValue = { Text(if (preset.spacing >= 0) "${if (it < 10) "%.2f".format(it) else it.roundToInt()} pixels" else "${(it * 100).roundToInt()}%") },
             value = abs(preset.spacing),
-            range = when {
-                preset.spacing > 0 -> 0.1f..1000f
-                preset.spacing < 0 -> 0.01f..10f
-                else -> 0.01f..1000f
-            },
-            forwardMapping = when {
-                preset.spacing > 0 -> ({ (it / 1000f).pow(0.1f) })
-                else -> ({ it })
-            },
-            backwardMapping = when {
-                preset.spacing > 0 -> ({ it.pow(1f / 0.1f) * 1000f })
-                else -> ({ it })
-            },
+            valueRange = if (preset.spacing >= 0) 0.1f..1000f else 0.01f..10f,
+            exponent = if (preset.spacing >= 0) 0.5f else 1f,
+            onValueChange = { onPresetChange { preset -> preset.copy(spacing = if (preset.spacing >= 0) it else -it) } },
+            onValueChangeFinished = onPresetChangeFinished,
             action = {
                 Row(horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
                     ToggleButton(
                         modifier = Modifier.width(80.dp),
+                        checked = preset.spacing >= 0,
                         shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
-                        checked = preset.spacing > 0f,
                         onCheckedChange = {
-                            if (preset.spacing < 0f) {
-                                onPresetChange(preset.copy(spacing = 1f))
-                                onPresetChangeFinished()
-                            }
+                            if (it) onPresetChange { preset -> preset.copy(spacing = preset.size.base * -preset.spacing) }
+                            onPresetChangeFinished()
                         },
                         content = { Text("Fixed") }
                     )
-
                     ToggleButton(
                         modifier = Modifier.width(80.dp),
+                        checked = preset.spacing < 0,
                         shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
-                        checked = preset.spacing < 0f,
                         onCheckedChange = {
-                            if (preset.spacing > 0f) {
-                                onPresetChange(preset.copy(spacing = -0.5f))
-                                onPresetChangeFinished()
-                            }
+                            if (it) onPresetChange { preset -> preset.copy(spacing = -(preset.spacing / preset.size.base)) }
+                            onPresetChangeFinished()
                         },
                         content = { Text("Auto") }
                     )
                 }
-            },
-            onValueChange = {
-                onPresetChange(preset.copy(spacing = when {
-                    preset.spacing > 0 -> it
-                    preset.spacing < 0 -> -it
-                    else -> it
-                }))
-            },
-            onValueChangeFinished = onPresetChangeFinished
+            }
         )
 
-        StampBrush.allParameters.forEach { parameter ->
-            val name = stringResource(parameter.nameRes)
+        for (parameter in StampBrush.allParameters) {
             val dynamic = parameter.getDynamic(preset)
+            val name = stringResource(parameter.nameRes)
 
             BrushSliderParameter(
                 icon = { Icon(painterResource(parameter.iconRes), name) },
                 label = { Text(name) },
                 formatValue = { Text(parameter.formatValue(it)) },
                 value = dynamic.base,
-                range = parameter.min..parameter.max,
-                forwardMapping = parameter::forwardMapToSlider,
-                backwardMapping = parameter::backwardMapToSlider,
-                sliderTrack = when (parameter.centered) {
-                    true -> { sliderState -> SliderDefaults.CenteredTrack(colors = SliderDefaults.colors(), sliderState = sliderState) }
-                    false -> { sliderState -> SliderDefaults.Track(colors = SliderDefaults.colors(), sliderState = sliderState) }
-                },
+                valueRange = parameter.valueRange,
+                exponent = parameter.exponent,
+                onValueChange = { onPresetChange { preset -> parameter.replaceDynamic(preset, dynamic.copy(base = it)) } },
+                onValueChangeFinished = onPresetChangeFinished,
                 action = {
                     ToggleButton(
                         checked = dynamic.modifiers.isNotEmpty(),
                         onCheckedChange = { onDynamicEditor(parameter.parameter) }
                     ) {
-                        Icon(painterResource(R.drawable.edit_24px), "Sensor")
-                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                        Text("Sensor")
+                        Row(horizontalArrangement = Arrangement.spacedBy(ButtonDefaults.IconSpacing)) {
+                            Icon(painterResource(R.drawable.edit_24px), "Sensor")
+                            Text("Sensor")
+                        }
                     }
-                },
-                onValueChange = {
-                    val dynamic = dynamic.copy(base = it)
-                    onPresetChange(parameter.replaceDynamic(preset, dynamic))
-                },
-                onValueChangeFinished = onPresetChangeFinished
+                }
             )
         }
     }

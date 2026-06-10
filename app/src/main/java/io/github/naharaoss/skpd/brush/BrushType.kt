@@ -37,12 +37,9 @@ interface BrushType<P : BrushType.Preset> {
         val parameter: String
         @get:StringRes val nameRes: Int
         @get:DrawableRes val iconRes: Int
-        val min: Float
-        val max: Float
-        val centered: Boolean
+        val exponent: Float
+        val valueRange: ClosedFloatingPointRange<Float>
         @Composable fun formatValue(value: Float): String
-        fun forwardMapToSlider(value: Float): Float
-        fun backwardMapToSlider(slider: Float): Float
         fun getDynamic(preset: P): Dynamic
         fun replaceDynamic(preset: P, dynamic: Dynamic): P
 

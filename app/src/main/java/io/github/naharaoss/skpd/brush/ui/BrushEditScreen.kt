@@ -40,6 +40,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.naharaoss.skpd.R
 import io.github.naharaoss.skpd.brush.BrushPresetViewModel
+import io.github.naharaoss.skpd.brush.BrushType
 import io.github.naharaoss.skpd.brush.impl.StampBrush
 import io.github.naharaoss.skpd.resource.BrushItem
 import io.github.naharaoss.skpd.ui.component.TooltipIconButton
@@ -57,7 +58,8 @@ fun BrushEditScreen(
     val scope = rememberCoroutineScope()
     val brush by presetViewModel.brush.collectAsState()
     val preset by presetViewModel.preset.collectAsState()
-    var decoupledPreset by remember(preset) { mutableStateOf(preset) }
+    var pendingChange: ((BrushType.Preset) -> BrushType.Preset)? by remember { mutableStateOf(null) }
+    val pendingPreset = preset?.let { preset -> pendingChange?.let { it(preset) } } ?: preset
 
     Scaffold(
         modifier = modifier,
@@ -94,7 +96,7 @@ fun BrushEditScreen(
             ) {
                 BrushCard(
                     modifier = Modifier.fillMaxSize().height(96.dp),
-                    preset = decoupledPreset,
+                    preset = pendingPreset,
                     favorite = false,
                     selected = false,
                     label = { Text(brush.name) },
@@ -147,22 +149,24 @@ fun BrushEditScreen(
 
             HorizontalDivider(Modifier.fillMaxWidth())
 
-            decoupledPreset?.let { preset ->
-                when (preset) {
-                    is StampBrush.Preset -> StampPresetEditor(
-                        modifier = Modifier.fillMaxWidth(),
-                        preset = preset,
-                        onPresetChange = { decoupledPreset = it },
-                        onPresetChangeFinished = {
-                            decoupledPreset?.let { preset ->
-                                scope.launch {
-                                    presetViewModel.changePreset(preset)
-                                }
+            when (pendingPreset) {
+                is StampBrush.Preset -> StampPresetEditor(
+                    modifier = Modifier.fillMaxWidth(),
+                    preset = pendingPreset,
+                    onDynamicEditor = { onDynamicEditor(brush, it) },
+                    onPresetChange = { updater ->
+                        pendingChange = { if (it is StampBrush.Preset) updater(it) else it }
+                    },
+                    onPresetChangeFinished = {
+                        pendingChange?.let { pendingChange ->
+                            scope.launch {
+                                presetViewModel.updatePreset(pendingChange)
                             }
-                        },
-                        onDynamicEditor = { onDynamicEditor(brush, it) }
-                    )
-                }
+                        }
+
+                        pendingChange = null
+                    }
+                )
             }
 
             Spacer(Modifier.height(innerPadding.calculateBottomPadding()))

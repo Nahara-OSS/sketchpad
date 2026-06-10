@@ -26,7 +26,6 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.UUID
 import kotlin.math.PI
-import kotlin.math.pow
 import kotlin.math.roundToInt
 
 /**
@@ -77,100 +76,78 @@ object StampBrush : BrushType<StampBrush.Preset> {
     )
 
     val countParameter = object : BrushType.ParameterInfo<Preset> {
-        override val parameter: String get() = "count"
-        override val nameRes: Int get() = R.string.parameter_stamp_count
-        override val iconRes: Int get() = R.drawable.workspaces_24px
-        override val min: Float get() = 1f
-        override val max: Float get() = 100f
-        override val centered: Boolean = false
+        override val parameter = "count"
+        override val nameRes = R.string.parameter_stamp_count
+        override val iconRes = R.drawable.workspaces_24px
+        override val valueRange = 1f..10f
+        override val exponent = 1f
         @Composable override fun formatValue(value: Float): String = "${value.roundToInt()} stamps"
-        override fun forwardMapToSlider(value: Float): Float = value
-        override fun backwardMapToSlider(slider: Float): Float = slider
         override fun getDynamic(preset: Preset): Dynamic = preset.count
         override fun replaceDynamic(preset: Preset, dynamic: Dynamic): Preset = preset.copy(count = dynamic)
     }
 
     val sizeParameter = object : BrushType.ParameterInfo<Preset> {
-        private val sliderMapExponent = 0.1f
-        override val parameter: String get() = "size"
-        override val nameRes: Int get() = R.string.parameter_stamp_size
-        override val iconRes: Int get() = R.drawable.edit_24px
-        override val min: Float get() = 1f
-        override val max: Float get() = 1000f
-        override val centered: Boolean = false
+        override val parameter = "size"
+        override val nameRes = R.string.parameter_stamp_size
+        override val iconRes = R.drawable.edit_24px
+        override val valueRange = 1f..1000f
+        override val exponent = 0.5f
         @Composable override fun formatValue(value: Float): String = "${if (value < 10) "%.2f".format(value) else value.roundToInt()} pixels"
-        override fun forwardMapToSlider(value: Float): Float = (value / max).pow(sliderMapExponent)
-        override fun backwardMapToSlider(slider: Float): Float = slider.pow(1f / sliderMapExponent) * max
         override fun getDynamic(preset: Preset): Dynamic = preset.size
         override fun replaceDynamic(preset: Preset, dynamic: Dynamic): Preset = preset.copy(size = dynamic)
     }
 
     val opacityParameter = object : BrushType.ParameterInfo<Preset> {
-        override val parameter: String get() = "opacity"
-        override val nameRes: Int get() = R.string.parameter_stamp_opacity
-        override val iconRes: Int get() = R.drawable.opacity_24px
-        override val min: Float get() = 0f
-        override val max: Float get() = 1f
-        override val centered: Boolean = false
+        override val parameter = "opacity"
+        override val nameRes = R.string.parameter_stamp_opacity
+        override val iconRes = R.drawable.opacity_24px
+        override val valueRange = 0f..1f
+        override val exponent = 1f
         @Composable override fun formatValue(value: Float): String = "${(value * 100).roundToInt()}%"
-        override fun forwardMapToSlider(value: Float): Float = value
-        override fun backwardMapToSlider(slider: Float): Float = slider
         override fun getDynamic(preset: Preset): Dynamic = preset.opacity
         override fun replaceDynamic(preset: Preset, dynamic: Dynamic): Preset = preset.copy(opacity = dynamic)
     }
 
     val flowParameter = object : BrushType.ParameterInfo<Preset> {
-        override val parameter: String = "flow"
-        override val nameRes: Int = R.string.parameter_stamp_flow
-        override val iconRes: Int = R.drawable.animation_24px
-        override val min: Float = 0f
-        override val max: Float = 1f
-        override val centered: Boolean = false
+        override val parameter = "flow"
+        override val nameRes = R.string.parameter_stamp_flow
+        override val iconRes = R.drawable.animation_24px
+        override val valueRange = 0f..1f
+        override val exponent = 1f
         @Composable override fun formatValue(value: Float): String = "${(value * 100).roundToInt()}%"
-        override fun forwardMapToSlider(value: Float): Float = value
-        override fun backwardMapToSlider(slider: Float): Float = slider
         override fun getDynamic(preset: Preset): Dynamic = preset.flow
         override fun replaceDynamic(preset: Preset, dynamic: Dynamic): Preset = preset.copy(flow = dynamic)
     }
 
     val rotationParameter = object : BrushType.ParameterInfo<Preset> {
-        override val parameter: String = "rotation"
-        override val nameRes: Int = R.string.parameter_stamp_rotation
-        override val iconRes: Int = R.drawable.rotate_left_24px
-        override val min: Float = 0f
-        override val max: Float = 360f
-        override val centered: Boolean = false
+        override val parameter = "rotation"
+        override val nameRes = R.string.parameter_stamp_rotation
+        override val iconRes = R.drawable.rotate_left_24px
+        override val valueRange = 0f..360f
+        override val exponent = 1f
         @Composable override fun formatValue(value: Float): String = "${value.roundToInt()}\u00B0"
-        override fun forwardMapToSlider(value: Float): Float = value
-        override fun backwardMapToSlider(slider: Float): Float = slider
         override fun getDynamic(preset: Preset): Dynamic = preset.rotation
         override fun replaceDynamic(preset: Preset, dynamic: Dynamic): Preset = preset.copy(rotation = dynamic)
     }
 
     val offsetXParameter = object : BrushType.ParameterInfo<Preset> {
-        override val parameter: String = "offset-x"
-        override val nameRes: Int = R.string.parameter_stamp_offset_x
-        override val iconRes: Int = R.drawable.adjust_24px
-        override val min: Float = -100f
-        override val max: Float = +100f
-        override val centered: Boolean = true
+        override val parameter = "offset-x"
+        override val nameRes = R.string.parameter_stamp_offset_x
+        override val iconRes = R.drawable.adjust_24px
+        override val valueRange = -100f..100f
+        override val exponent = 1f
         @Composable override fun formatValue(value: Float): String = "${if (value < 10) "%.2f".format(value) else value.roundToInt()} pixels"
-        override fun forwardMapToSlider(value: Float): Float = value
-        override fun backwardMapToSlider(slider: Float): Float = slider
         override fun getDynamic(preset: Preset): Dynamic = preset.offsetX
         override fun replaceDynamic(preset: Preset, dynamic: Dynamic): Preset = preset.copy(offsetX = dynamic)
     }
 
     val offsetYParameter = object : BrushType.ParameterInfo<Preset> {
-        override val parameter: String = "offset-y"
-        override val nameRes: Int = R.string.parameter_stamp_offset_y
-        override val iconRes: Int = R.drawable.adjust_24px
-        override val min: Float = -100f
-        override val max: Float = +100f
-        override val centered: Boolean = true
+        override val parameter = "offset-y"
+        override val nameRes = R.string.parameter_stamp_offset_y
+        override val iconRes = R.drawable.adjust_24px
+        override val valueRange = -100f..100f
+        override val exponent = 1f
         @Composable override fun formatValue(value: Float): String = "${if (value < 10) "%.2f".format(value) else value.roundToInt()} pixels"
-        override fun forwardMapToSlider(value: Float): Float = value
-        override fun backwardMapToSlider(slider: Float): Float = slider
         override fun getDynamic(preset: Preset): Dynamic = preset.offsetY
         override fun replaceDynamic(preset: Preset, dynamic: Dynamic): Preset = preset.copy(offsetY = dynamic)
     }

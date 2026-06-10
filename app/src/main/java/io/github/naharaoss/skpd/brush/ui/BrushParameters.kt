@@ -3,6 +3,7 @@ package io.github.naharaoss.skpd.brush.ui
 import android.icu.text.DecimalFormat
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -14,10 +15,6 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderColors
-import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.SliderState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -33,6 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import io.github.naharaoss.skpd.ui.component.FancyDialog
+import io.github.naharaoss.skpd.ui.component.SketchpadCenteredSlider
+import io.github.naharaoss.skpd.ui.component.SketchpadSlider
 import java.text.ParseException
 
 @Composable
@@ -42,15 +41,12 @@ fun BrushSliderParameter(
     icon: @Composable () -> Unit,
     label: @Composable () -> Unit,
     formatValue: @Composable (Float) -> Unit,
-    value: Float,
-    onValueChange: (Float) -> Unit,
-    onValueChangeFinished: () -> Unit,
     action: @Composable () -> Unit = {},
-    range: ClosedFloatingPointRange<Float>,
-    forwardMapping: (Float) -> Float = { it },
-    backwardMapping: (Float) -> Float = { it },
-    sliderColors: SliderColors = SliderDefaults.colors(),
-    sliderTrack: @Composable (SliderState) -> Unit = { sliderState -> SliderDefaults.Track(colors = sliderColors, enabled = enabled, sliderState = sliderState) }
+    exponent: Float = 1f,
+    value: Float,
+    valueRange: ClosedFloatingPointRange<Float>,
+    onValueChange: (Float) -> Unit,
+    onValueChangeFinished: () -> Unit = {},
 ) {
     var manualInputDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -60,17 +56,28 @@ fun BrushSliderParameter(
         label = label,
         value = { formatValue(value) },
         action = action,
-        content = {
-            Slider(
-                value = forwardMapping(value),
-                valueRange = forwardMapping(range.start)..forwardMapping(range.endInclusive),
-                onValueChange = { onValueChange(backwardMapping(it)) },
-                onValueChangeFinished = onValueChangeFinished,
-                track = sliderTrack
-            )
-        },
         onLabelClick = { manualInputDialog = true }
-    )
+    ) {
+        if (-valueRange.start == valueRange.endInclusive) {
+            SketchpadCenteredSlider(
+                enabled = enabled,
+                exponent = exponent,
+                value = value,
+                valueRange = valueRange.endInclusive,
+                onValueChange = onValueChange,
+                onValueChangeFinished = onValueChangeFinished
+            )
+        } else {
+            SketchpadSlider(
+                enabled = enabled,
+                exponent = exponent,
+                value = value,
+                valueRange = valueRange,
+                onValueChange = onValueChange,
+                onValueChangeFinished = onValueChangeFinished
+            )
+        }
+    }
 
     if (manualInputDialog) {
         val formatter = remember { DecimalFormat("#,##0.####") }
@@ -78,8 +85,8 @@ fun BrushSliderParameter(
         val convertedValue = try {
             val value = formatter.parse(value)!!.toFloat()
             when {
-                value < range.start -> range.start
-                value > range.endInclusive -> range.endInclusive
+                value < valueRange.start -> valueRange.start
+                value > valueRange.endInclusive -> valueRange.endInclusive
                 else -> value
             }
         } catch (e: ParseException) {
@@ -129,6 +136,7 @@ fun BrushSliderParameter(
 @Composable
 fun BrushParameterLayout(
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     onLabelClick: (() -> Unit)? = null,
     icon: @Composable () -> Unit,
     label: @Composable () -> Unit,
@@ -136,18 +144,16 @@ fun BrushParameterLayout(
     action: @Composable () -> Unit,
     content: @Composable () -> Unit
 ) {
-    Column(
-        modifier = modifier.padding(16.dp, 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
+    val rowModifier = if (onLabelClick != null) Modifier.clickable(enabled = enabled, onClick = onLabelClick) else Modifier
+
+    Column(modifier) {
         Row(
+            modifier = rowModifier.padding(16.dp, 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            val rowModifier = if (onLabelClick != null) Modifier.clickable(enabled = true, onClick = onLabelClick) else Modifier
-
             Row(
-                modifier = rowModifier.weight(1f).height(IntrinsicSize.Max),
+                modifier = Modifier.weight(1f).height(IntrinsicSize.Max),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -175,6 +181,8 @@ fun BrushParameterLayout(
             action()
         }
 
-        content()
+        Box(Modifier.padding(16.dp, 0.dp, 16.dp, 8.dp)) {
+            content()
+        }
     }
 }

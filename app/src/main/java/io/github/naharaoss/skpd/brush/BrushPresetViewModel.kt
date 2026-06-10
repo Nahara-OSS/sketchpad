@@ -10,6 +10,7 @@ import io.github.naharaoss.skpd.resource.BrushItem
 import io.github.naharaoss.skpd.resource.BrushRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel(assistedFactory = BrushPresetViewModel.Factory::class)
@@ -41,7 +42,10 @@ class BrushPresetViewModel @AssistedInject constructor(
         }
     }
 
-    suspend fun changePreset(preset: BrushType.Preset) = brushRepository.changePreset(brush.value, preset)
+    suspend fun updatePreset(updater: (BrushType.Preset) -> BrushType.Preset) {
+        _preset.update { if (it != null) updater(it) else it }
+        _preset.value?.let { brushRepository.changePreset(_brush.value, it) }
+    }
 
     @AssistedFactory
     interface Factory {

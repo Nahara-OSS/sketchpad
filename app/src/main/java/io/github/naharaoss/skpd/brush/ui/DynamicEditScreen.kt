@@ -27,7 +27,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -47,6 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.naharaoss.skpd.R
 import io.github.naharaoss.skpd.brush.BrushPresetViewModel
+import io.github.naharaoss.skpd.brush.BrushType
 import io.github.naharaoss.skpd.brush.Dynamic
 import io.github.naharaoss.skpd.brush.Sensor
 import io.github.naharaoss.skpd.ui.component.TooltipIconButton
@@ -55,6 +55,8 @@ import io.github.naharaoss.skpd.utils.GraphEditor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
+import kotlin.math.abs
+import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -101,8 +103,7 @@ fun DynamicEditScreen(
                 val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
                 val parameter = preset.type.allParameters.find { it.parameter == parameter }!!
                 val parameterName = stringResource(parameter.nameRes)
-                var decoupledPreset by remember(preset) { mutableStateOf(preset) }
-                val dynamic = parameter.getDynamicTypeErased(decoupledPreset)
+                val dynamic = parameter.getDynamicTypeErased(preset)
                 val scope = rememberCoroutineScope()
 
                 Scaffold(
@@ -123,27 +124,28 @@ fun DynamicEditScreen(
                     }
                 ) { innerPadding ->
                     LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .nestedScroll(scrollBehavior.nestedScrollConnection),
+                        modifier = Modifier.fillMaxWidth().nestedScroll(scrollBehavior.nestedScrollConnection),
                         contentPadding = innerPadding
                     ) {
-                        item {
+                        item(key = "(base value)") {
+                            var base by remember(dynamic.base) { mutableFloatStateOf(dynamic.base) }
+
                             BrushSliderParameter(
                                 icon = { Icon(painterResource(parameter.iconRes), "Base value") },
                                 label = { Text("Base value") },
                                 formatValue = { Text(parameter.formatValue(it)) },
-                                value = dynamic.base,
-                                range = parameter.min..parameter.max,
-                                forwardMapping = parameter::forwardMapToSlider,
-                                backwardMapping = parameter::backwardMapToSlider,
-                                sliderTrack = when (parameter.centered) {
-                                    true -> { sliderState -> SliderDefaults.CenteredTrack(colors = SliderDefaults.colors(), sliderState = sliderState) }
-                                    false -> { sliderState -> SliderDefaults.Track(colors = SliderDefaults.colors(), sliderState = sliderState) }
-                                },
-                                onValueChange = { decoupledPreset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic.copy(base = it)) },
+                                exponent = parameter.exponent,
+                                value = base,
+                                valueRange = parameter.valueRange,
+                                onValueChange = { base = it },
                                 onValueChangeFinished = {
-                                    scope.launch { presetViewModel.changePreset(decoupledPreset) }
+                                    scope.launch {
+                                        presetViewModel.updatePreset {
+                                            val dynamic = parameter.getDynamicTypeErased(it)
+                                            val preset = parameter.replaceDynamicTypeErased(it, dynamic.copy(base = base))
+                                            preset
+                                        }
+                                    }
                                 }
                             )
                         }
@@ -151,14 +153,18 @@ fun DynamicEditScreen(
                         items(count = dynamic.modifiers.size, key = { dynamic.modifiers[it].id }) { i ->
                             val modifier = dynamic.modifiers[i]
                             val sensorName = stringResource(modifier.sensor.nameRes)
-                            var showGraph by remember { mutableStateOf(false) }
-                            var decoupledGraph by remember { mutableStateOf(modifier.graph) }
+                            var showDetails by remember { mutableStateOf(false) }
                             var sensorDropdown by remember { mutableStateOf(false) }
                             var operationDropdown by remember { mutableStateOf(false) }
 
-                            SegmentedListItem(
-                                shapes = ListItemDefaults.segmentedShapes(i, dynamic.modifiers.size + 1),
-                                selected = showGraph,
+                            fun BrushType.Preset.updateModifier(updater: (Dynamic.Modifier) -> Dynamic.Modifier): BrushType.Preset {
+                                val dynamic = parameter.getDynamicTypeErased(this)
+                                val modifiers = dynamic.modifiers.map { if (it.id == modifier.id) updater(modifier) else it }
+                                return parameter.replaceDynamicTypeErased(this, dynamic.copy(modifiers = modifiers))
+                            }
+
+                            ListItem(
+                                selected = showDetails,
                                 content = { Text(sensorName) },
                                 supportingContent = {
                                     when (modifier.operation) {
@@ -176,13 +182,10 @@ fun DynamicEditScreen(
                                     }
                                 },
                                 leadingContent = { Icon(painterResource(modifier.sensor.iconRes), sensorName) },
-                                onClick = { showGraph = !showGraph }
+                                onClick = { showDetails = !showDetails }
                             )
 
-                            AnimatedVisibility(
-                                modifier = Modifier.fillMaxWidth(),
-                                visible = showGraph
-                            ) {
+                            AnimatedVisibility(modifier = Modifier.fillMaxWidth(), visible = showDetails) {
                                 Column {
                                     ListItem(
                                         onClick = { sensorDropdown = true },
@@ -196,22 +199,20 @@ fun DynamicEditScreen(
                                             ) {
                                                 Sensor.AllDefaults.forEach { sensor ->
                                                     val sensorName = stringResource(sensor.nameRes)
+                                                    val selected = sensor.javaClass == modifier.sensor.javaClass
 
                                                     DropdownMenuItem(
                                                         leadingIcon = { Icon(painterResource(sensor.iconRes), sensorName) },
-                                                        trailingIcon = if (sensor.javaClass == modifier.sensor.javaClass) {
-                                                            { Icon(painterResource(R.drawable.check_24px), "Selected") }
-                                                        } else {
-                                                            null
-                                                        },
+                                                        trailingIcon = { if (selected) Icon(painterResource(R.drawable.check_24px), "Selected") },
                                                         text = { Text(sensorName) },
                                                         onClick = {
-                                                            val modifier = modifier.copy(sensor = sensor)
-                                                            val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
-                                                            val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
-                                                            decoupledPreset = preset
+                                                            scope.launch {
+                                                                presetViewModel.updatePreset {
+                                                                    it.updateModifier { mod -> mod.copy(sensor = sensor) }
+                                                                }
+                                                            }
+
                                                             sensorDropdown = false
-                                                            scope.launch { presetViewModel.changePreset(decoupledPreset) }
                                                         }
                                                     )
                                                 }
@@ -233,15 +234,14 @@ fun DynamicEditScreen(
                                                     label = { Text("Maximum speed") },
                                                     formatValue = { Text("${if (it < 10) "%.2f".format(it) else it.roundToInt()} pixels per second") },
                                                     value = max,
-                                                    range = 1f..10000f,
+                                                    valueRange = 1f..10000f,
                                                     onValueChange = { max = it },
                                                     onValueChangeFinished = {
-                                                        val modifier = modifier.copy(sensor = sensor.copy(max = max))
-                                                        val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
-                                                        val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
-                                                        decoupledPreset = preset
-                                                        sensorDropdown = false
-                                                        scope.launch { presetViewModel.changePreset(decoupledPreset) }
+                                                        scope.launch {
+                                                            presetViewModel.updatePreset {
+                                                                it.updateModifier { mod -> mod.copy(sensor = Sensor.Velocity(max)) }
+                                                            }
+                                                        }
                                                     }
                                                 )
                                             }
@@ -255,15 +255,14 @@ fun DynamicEditScreen(
                                                     label = { Text("Maximum duration") },
                                                     formatValue = { Text("${if (it < 10) "%.2f".format(it) else it.roundToInt()} seconds") },
                                                     value = max,
-                                                    range = 1f..60f,
+                                                    valueRange = 1f..60f,
                                                     onValueChange = { max = it },
                                                     onValueChangeFinished = {
-                                                        val modifier = modifier.copy(sensor = sensor.copy(max = max))
-                                                        val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
-                                                        val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
-                                                        decoupledPreset = preset
-                                                        sensorDropdown = false
-                                                        scope.launch { presetViewModel.changePreset(decoupledPreset) }
+                                                        scope.launch {
+                                                            presetViewModel.updatePreset {
+                                                                it.updateModifier { mod -> mod.copy(sensor = Sensor.Time(max)) }
+                                                            }
+                                                        }
                                                     }
                                                 )
                                             }
@@ -288,7 +287,7 @@ fun DynamicEditScreen(
                                                 onDismissRequest = { operationDropdown = false }
                                             ) {
                                                 listOf(
-                                                    Dynamic.Operation.Additive(0f, parameter.max),
+                                                    Dynamic.Operation.Additive(0f, parameter.valueRange.endInclusive),
                                                     Dynamic.Operation.Multiplicative(0f, 1f)
                                                 ).forEach { operation ->
                                                     DropdownMenuItem(
@@ -305,12 +304,11 @@ fun DynamicEditScreen(
                                                             }
                                                         },
                                                         onClick = {
-                                                            val modifier = modifier.copy(operation = operation)
-                                                            val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
-                                                            val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
-                                                            decoupledPreset = preset
-                                                            operationDropdown = false
-                                                            scope.launch { presetViewModel.changePreset(decoupledPreset) }
+                                                            scope.launch {
+                                                                presetViewModel.updatePreset {
+                                                                    it.updateModifier { mod -> mod.copy(operation = operation) }
+                                                                }
+                                                            }
                                                         }
                                                     )
                                                 }
@@ -327,7 +325,7 @@ fun DynamicEditScreen(
                                             is Dynamic.Operation.Additive -> {
                                                 var minValue by remember { mutableFloatStateOf(operation.minValue) }
                                                 var maxValue by remember { mutableFloatStateOf(operation.maxValue) }
-                                                val mappedMax = parameter.forwardMapToSlider(parameter.max)
+                                                val additiveRange = max(abs(parameter.valueRange.start), abs(parameter.valueRange.endInclusive))
 
                                                 BrushParameterLayout(
                                                     icon = { Icon(painterResource(R.drawable.question_mark_24px), "Value") },
@@ -337,17 +335,17 @@ fun DynamicEditScreen(
                                                 ) {
                                                     RangeSlider(
                                                         value = minValue..maxValue,
-                                                        valueRange = -mappedMax..mappedMax,
+                                                        valueRange = -additiveRange..additiveRange,
                                                         onValueChange = {
                                                             minValue = it.start
                                                             maxValue = it.endInclusive
                                                         },
                                                         onValueChangeFinished = {
-                                                            val modifier = modifier.copy(operation = operation.copy(minValue = minValue, maxValue = maxValue))
-                                                            val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
-                                                            val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
-                                                            decoupledPreset = preset
-                                                            scope.launch { presetViewModel.changePreset(decoupledPreset) }
+                                                            scope.launch {
+                                                                presetViewModel.updatePreset {
+                                                                    it.updateModifier { mod -> mod.copy(operation = Dynamic.Operation.Additive(minValue, maxValue)) }
+                                                                }
+                                                            }
                                                         }
                                                     )
                                                 }
@@ -360,7 +358,7 @@ fun DynamicEditScreen(
                                                 BrushParameterLayout(
                                                     icon = { Icon(painterResource(R.drawable.question_mark_24px), "Value") },
                                                     label = { Text("Modifier gain") },
-                                                    value = { Text("${(minGain * 100f).roundToInt()}% to ${(maxGain * 100f).roundToInt()}") },
+                                                    value = { Text("${(minGain * 100f).roundToInt()}% to ${(maxGain * 100f).roundToInt()}%") },
                                                     action = {}
                                                 ) {
                                                     RangeSlider(
@@ -371,11 +369,11 @@ fun DynamicEditScreen(
                                                             maxGain = it.endInclusive
                                                         },
                                                         onValueChangeFinished = {
-                                                            val modifier = modifier.copy(operation = operation.copy(minGain = minGain, maxGain = maxGain))
-                                                            val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
-                                                            val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
-                                                            decoupledPreset = preset
-                                                            scope.launch { presetViewModel.changePreset(decoupledPreset) }
+                                                            scope.launch {
+                                                                presetViewModel.updatePreset {
+                                                                    it.updateModifier { mod -> mod.copy(operation = Dynamic.Operation.Multiplicative(minGain, maxGain)) }
+                                                                }
+                                                            }
                                                         }
                                                     )
                                                 }
@@ -385,10 +383,13 @@ fun DynamicEditScreen(
 
                                     ListItem(
                                         onClick = {
-                                            val dynamic = dynamic.copy(modifiers = dynamic.modifiers.filter { it.id != modifier.id })
-                                            val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
-                                            decoupledPreset = preset
-                                            scope.launch { presetViewModel.changePreset(decoupledPreset) }
+                                            scope.launch {
+                                                presetViewModel.updatePreset {
+                                                    val dynamic = parameter.getDynamicTypeErased(it)
+                                                    val modifiers = dynamic.modifiers.filter { mod -> mod.id != modifier.id }
+                                                    parameter.replaceDynamicTypeErased(it, dynamic.copy(modifiers = modifiers) )
+                                                }
+                                            }
                                         },
                                         colors = ListItemDefaults.colors(contentColor = MaterialTheme.colorScheme.error),
                                         content = { Text("Delete modifier") },
@@ -399,14 +400,13 @@ fun DynamicEditScreen(
                                     GraphEditor(
                                         modifier = Modifier.fillMaxWidth().height(300.dp),
                                         enabled = true,
-                                        graph = decoupledGraph,
-                                        onGraphChange = {
-                                            val modifier = modifier.copy(graph = it)
-                                            val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
-                                            val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
-                                            decoupledPreset = preset
-                                            decoupledGraph = it
-                                            scope.launch { presetViewModel.changePreset(decoupledPreset) }
+                                        graph = modifier.graph,
+                                        onGraphChange = { graph ->
+                                            scope.launch {
+                                                presetViewModel.updatePreset {
+                                                    it.updateModifier { mod -> mod.copy(graph = graph) }
+                                                }
+                                            }
                                         },
                                         xAxisLabel = { Text(sensorName) },
                                         yAxisLabel = { Text(parameterName) }
@@ -415,7 +415,7 @@ fun DynamicEditScreen(
                             }
                         }
 
-                        item {
+                        item(key = "(add new modifier)") {
                             SegmentedListItem(
                                 shapes = ListItemDefaults.segmentedShapes(dynamic.modifiers.size, dynamic.modifiers.size + 1),
                                 content = { Text("Add new modifier") },
@@ -429,10 +429,12 @@ fun DynamicEditScreen(
                                         graph = Graph()
                                     )
 
-                                    val dynamic = dynamic.copy(modifiers = dynamic.modifiers + modifier)
-                                    val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
-                                    decoupledPreset = preset
-                                    scope.launch { presetViewModel.changePreset(decoupledPreset) }
+                                    scope.launch {
+                                        presetViewModel.updatePreset {
+                                            val dynamic = parameter.getDynamicTypeErased(it)
+                                            parameter.replaceDynamicTypeErased(it, dynamic.copy(modifiers = dynamic.modifiers + modifier))
+                                        }
+                                    }
                                 }
                             )
                         }
