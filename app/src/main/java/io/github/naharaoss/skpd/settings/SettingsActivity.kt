@@ -1,6 +1,5 @@
 package io.github.naharaoss.skpd.settings
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -79,15 +78,7 @@ class SettingsActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     route = key,
                     viewModel = viewModel,
-                    onNavigate = { navigateTo(it, false) },
-                    onOpenInputTester = {
-                        val intent = Intent(this, InputTestActivity::class.java)
-                        startActivity(intent)
-                    },
-                    onOpenSourceCode = {
-                        val intent = Intent(Intent.ACTION_VIEW, sourceUrl)
-                        startActivity(intent)
-                    }
+                    onNavigate = { navigateTo(it, false) }
                 )
             }
 

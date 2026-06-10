@@ -12,9 +12,7 @@ fun SettingsPage(
     modifier: Modifier = Modifier,
     route: SettingsRoute,
     viewModel: SettingsViewModel,
-    onNavigate: (SettingsRoute) -> Unit,
-    onOpenInputTester: () -> Unit,
-    onOpenSourceCode: () -> Unit
+    onNavigate: (SettingsRoute) -> Unit
 ) {
     val settings by viewModel.settings.collectAsState()
 
@@ -28,8 +26,7 @@ fun SettingsPage(
         is SettingsRoute.Input -> InputSettingsPage(
             modifier = modifier,
             settings = settings.input,
-            onSettingsChange = { viewModel.changeSettings(settings.copy(input = it)) },
-            onOpenInputTester = onOpenInputTester
+            onSettingsChange = { viewModel.changeSettings(settings.copy(input = it)) }
         )
 
         is SettingsRoute.Performance -> PerformanceSettingsPage(
@@ -45,8 +42,7 @@ fun SettingsPage(
         )
 
         is SettingsRoute.About -> AboutSettingsPage(
-            modifier = modifier,
-            onOpenSourceCode = onOpenSourceCode
+            modifier = modifier
         )
 
         else -> Box(modifier)

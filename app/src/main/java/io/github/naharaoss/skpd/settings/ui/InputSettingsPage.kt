@@ -1,5 +1,6 @@
 package io.github.naharaoss.skpd.settings.ui
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -10,18 +11,21 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import io.github.naharaoss.skpd.R
 import io.github.naharaoss.skpd.settings.InputSettings
+import io.github.naharaoss.skpd.settings.InputTestActivity
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun InputSettingsPage(
     modifier: Modifier = Modifier,
     settings: InputSettings,
-    onSettingsChange: (InputSettings) -> Unit,
-    onOpenInputTester: () -> Unit
+    onSettingsChange: (InputSettings) -> Unit
 ) {
+    val context = LocalContext.current
+
     Column(modifier.verticalScroll(rememberScrollState())) {
         ListItem(
             onClick = {},
@@ -37,7 +41,10 @@ fun InputSettingsPage(
         )
 
         ListItem(
-            onClick = onOpenInputTester,
+            onClick = {
+                val intent = Intent(context, InputTestActivity::class.java)
+                context.startActivity(intent)
+            },
             leadingContent = { Icon(painterResource(R.drawable.edit_24px), null) },
             content = { Text("Open input tester") },
             supportingContent = { Text("Test pen and touch inputs") }
