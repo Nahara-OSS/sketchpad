@@ -63,7 +63,7 @@ sealed interface Sensor {
     object Azimuth : Sensor {
         override val nameRes: Int = R.string.sensor_azimuth
         override val iconRes: Int = R.drawable.rotate_left_24px
-        override fun forInput(input: StylusInput): Float = input.azimuth / 360f
+        override fun forInput(input: StylusInput): Float = (input.azimuth + 180f) / 360f
     }
 
     /**
