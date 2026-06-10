@@ -47,8 +47,8 @@ data class Dynamic(val base: Float, val modifiers: List<Modifier> = emptyList())
          */
         @Serializable
         @SerialName("additive")
-        data class Additive(val value: Float) : Operation {
-            override fun apply(base: Float, graph: Float) = base + (value * graph)
+        data class Additive(val minValue: Float, val maxValue: Float) : Operation {
+            override fun apply(base: Float, graph: Float) = base + (maxValue - minValue) * graph + minValue
         }
 
         /**
@@ -56,8 +56,8 @@ data class Dynamic(val base: Float, val modifiers: List<Modifier> = emptyList())
          */
         @Serializable
         @SerialName("multiplicative")
-        data class Multiplicative(val gain: Float) : Operation {
-            override fun apply(base: Float, graph: Float) = base * (gain * graph)
+        data class Multiplicative(val minGain: Float, val maxGain: Float) : Operation {
+            override fun apply(base: Float, graph: Float) = base * ((maxGain - minGain) * graph + minGain)
         }
     }
 }

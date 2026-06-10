@@ -24,6 +24,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.SliderDefaults
@@ -164,13 +165,13 @@ fun DynamicEditScreen(
                                         is Dynamic.Operation.Multiplicative -> Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                             Text("Multiplicative")
                                             Text("\u2022")
-                                            Text("${(modifier.operation.gain * 100).roundToInt()}%")
+                                            Text("${(modifier.operation.minGain * 100).roundToInt()}% to ${(modifier.operation.maxGain * 100).roundToInt()}%")
                                         }
 
                                         is Dynamic.Operation.Additive -> Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                             Text("Additive")
                                             Text("\u2022")
-                                            Text(parameter.formatValue(modifier.operation.value))
+                                            Text("${parameter.formatValue(modifier.operation.minValue)} to ${parameter.formatValue(modifier.operation.maxValue)}")
                                         }
                                     }
                                 },
@@ -287,8 +288,8 @@ fun DynamicEditScreen(
                                                 onDismissRequest = { operationDropdown = false }
                                             ) {
                                                 listOf(
-                                                    Dynamic.Operation.Additive(parameter.max),
-                                                    Dynamic.Operation.Multiplicative(1f)
+                                                    Dynamic.Operation.Additive(0f, parameter.max),
+                                                    Dynamic.Operation.Multiplicative(0f, 1f)
                                                 ).forEach { operation ->
                                                     DropdownMenuItem(
                                                         leadingIcon = { Icon(painterResource(R.drawable.question_mark_24px), null) },
@@ -324,54 +325,60 @@ fun DynamicEditScreen(
                                     ) { operation ->
                                         when (operation) {
                                             is Dynamic.Operation.Additive -> {
-                                                var value by remember { mutableFloatStateOf(operation.value) }
+                                                var minValue by remember { mutableFloatStateOf(operation.minValue) }
+                                                var maxValue by remember { mutableFloatStateOf(operation.maxValue) }
                                                 val mappedMax = parameter.forwardMapToSlider(parameter.max)
 
-                                                BrushSliderParameter(
-                                                    modifier = Modifier.padding(top = 8.dp),
+                                                BrushParameterLayout(
                                                     icon = { Icon(painterResource(R.drawable.question_mark_24px), "Value") },
                                                     label = { Text("Modifier addition") },
-                                                    formatValue = {
-                                                        val input = if (it >= 0f) parameter.backwardMapToSlider(it) else -parameter.backwardMapToSlider(-it)
-                                                        Text((if (it >= 0) "+" else "") + parameter.formatValue(input))
-                                                    },
-                                                    value = if (value >= 0f) parameter.forwardMapToSlider(value) else -parameter.forwardMapToSlider(-value),
-                                                    range = -mappedMax..mappedMax,
-                                                    sliderTrack = { SliderDefaults.CenteredTrack(sliderState = it) },
-                                                    onValueChange = {
-                                                        val input = if (it >= 0f) parameter.backwardMapToSlider(it) else -parameter.backwardMapToSlider(-it)
-                                                        value = input
-                                                    },
-                                                    onValueChangeFinished = {
-                                                        val modifier = modifier.copy(operation = operation.copy(value = value))
-                                                        val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
-                                                        val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
-                                                        decoupledPreset = preset
-                                                        scope.launch { presetViewModel.changePreset(decoupledPreset) }
-                                                    }
-                                                )
+                                                    value = { Text("${parameter.formatValue(minValue)} to ${parameter.formatValue(maxValue)}") },
+                                                    action = {}
+                                                ) {
+                                                    RangeSlider(
+                                                        value = minValue..maxValue,
+                                                        valueRange = -mappedMax..mappedMax,
+                                                        onValueChange = {
+                                                            minValue = it.start
+                                                            maxValue = it.endInclusive
+                                                        },
+                                                        onValueChangeFinished = {
+                                                            val modifier = modifier.copy(operation = operation.copy(minValue = minValue, maxValue = maxValue))
+                                                            val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
+                                                            val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
+                                                            decoupledPreset = preset
+                                                            scope.launch { presetViewModel.changePreset(decoupledPreset) }
+                                                        }
+                                                    )
+                                                }
                                             }
 
                                             is Dynamic.Operation.Multiplicative -> {
-                                                var gain by remember { mutableFloatStateOf(operation.gain) }
+                                                var minGain by remember { mutableFloatStateOf(operation.minGain) }
+                                                var maxGain by remember { mutableFloatStateOf(operation.maxGain) }
 
-                                                BrushSliderParameter(
-                                                    modifier = Modifier.padding(top = 8.dp),
-                                                    icon = { Icon(painterResource(R.drawable.question_mark_24px), "Gain") },
+                                                BrushParameterLayout(
+                                                    icon = { Icon(painterResource(R.drawable.question_mark_24px), "Value") },
                                                     label = { Text("Modifier gain") },
-                                                    formatValue = { Text((if (it >= 0) "+" else "") + (it * 100).roundToInt() + "%") },
-                                                    value = gain,
-                                                    range = -1f..1f,
-                                                    sliderTrack = { SliderDefaults.CenteredTrack(sliderState = it) },
-                                                    onValueChange = { gain = it },
-                                                    onValueChangeFinished = {
-                                                        val modifier = modifier.copy(operation = operation.copy(gain = gain))
-                                                        val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
-                                                        val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
-                                                        decoupledPreset = preset
-                                                        scope.launch { presetViewModel.changePreset(decoupledPreset) }
-                                                    }
-                                                )
+                                                    value = { Text("${(minGain * 100f).roundToInt()}% to ${(maxGain * 100f).roundToInt()}") },
+                                                    action = {}
+                                                ) {
+                                                    RangeSlider(
+                                                        value = minGain..maxGain,
+                                                        valueRange = -1f..1f,
+                                                        onValueChange = {
+                                                            minGain = it.start
+                                                            maxGain = it.endInclusive
+                                                        },
+                                                        onValueChangeFinished = {
+                                                            val modifier = modifier.copy(operation = operation.copy(minGain = minGain, maxGain = maxGain))
+                                                            val dynamic = dynamic.copy(modifiers = dynamic.modifiers.map { if (it.id == modifier.id) modifier else it })
+                                                            val preset = parameter.replaceDynamicTypeErased(decoupledPreset, dynamic)
+                                                            decoupledPreset = preset
+                                                            scope.launch { presetViewModel.changePreset(decoupledPreset) }
+                                                        }
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -418,7 +425,7 @@ fun DynamicEditScreen(
                                     val modifier = Dynamic.Modifier(
                                         id = UUID.randomUUID().toString(),
                                         sensor = Sensor.Pressure,
-                                        operation = Dynamic.Operation.Multiplicative(gain = 1f),
+                                        operation = Dynamic.Operation.Multiplicative(0f, 1f),
                                         graph = Graph()
                                     )
 

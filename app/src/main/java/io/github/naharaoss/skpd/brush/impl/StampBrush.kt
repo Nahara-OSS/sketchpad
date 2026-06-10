@@ -54,7 +54,7 @@ object StampBrush : BrushType<StampBrush.Preset> {
                 Dynamic.Modifier(
                     id = UUID.nameUUIDFromBytes("StampBrush/Size/Pressure".toByteArray()).toString(),
                     sensor = Sensor.Pressure,
-                    operation = Dynamic.Operation.Multiplicative(1f),
+                    operation = Dynamic.Operation.Multiplicative(0f, 1f),
                     graph = Graph(markers = listOf())
                 )
             )
@@ -65,7 +65,7 @@ object StampBrush : BrushType<StampBrush.Preset> {
                 Dynamic.Modifier(
                     id = UUID.nameUUIDFromBytes("StampBrush/Opacity/Pressure".toByteArray()).toString(),
                     sensor = Sensor.Pressure,
-                    operation = Dynamic.Operation.Multiplicative(1f),
+                    operation = Dynamic.Operation.Multiplicative(0f, 1f),
                     graph = Graph(markers = listOf())
                 )
             )
