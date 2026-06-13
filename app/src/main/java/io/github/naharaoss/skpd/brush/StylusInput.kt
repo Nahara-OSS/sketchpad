@@ -20,7 +20,7 @@ data class StylusInput(
      * X position of the stylus.
      *
      * The position of this input event is in canvas coordinates, where `(0; 0)` corresponding to
-     * the center of the canvas. This value corresponds to [android.view.MotionEvent.AXIS_X].
+     * the center of the canvas. This value corresponds to [MotionEvent.AXIS_X].
      */
     val x: Float,
 
@@ -28,7 +28,7 @@ data class StylusInput(
      * Y position of the stylus.
      *
      * The position of this input event is in canvas coordinates, where `(0; 0)` corresponding to
-     * the center of the canvas. This value corresponds to [android.view.MotionEvent.AXIS_Y].
+     * the center of the canvas. This value corresponds to [MotionEvent.AXIS_Y].
      */
     val y: Float,
 
@@ -47,7 +47,7 @@ data class StylusInput(
      * A normalized logical pressure is a value that is scaled from the raw value to `[0; 1]` range.
      * In many cases, the shape of `y = f(x)` (where `y` is logical and `x` is physical) is not a
      * linear curve, but instead following the `x^(1/c)` form. This value corresponds to
-     * [android.view.MotionEvent.AXIS_PRESSURE].
+     * [MotionEvent.AXIS_PRESSURE].
      */
     val pressure: Float,
 
@@ -55,7 +55,7 @@ data class StylusInput(
      * Stylus altitude tilt angle.
      *
      * The value is 0 for completely flat on surface, and 90 for completely perpendicular to the
-     * surface. This value corresponds to [android.view.MotionEvent.AXIS_TILT].
+     * surface. This value corresponds to [MotionEvent.AXIS_TILT].
      */
     val altitude: Float,
 
@@ -63,17 +63,16 @@ data class StylusInput(
      * Stylus azimuth tilt angle.
      *
      * The value is 0 for tilting to +Y, +90 for tilting to -X, +180/-180 for tilting to +Y and -90
-     * for tilting to +X. This value corresponds to [android.view.MotionEvent.AXIS_ORIENTATION].
+     * for tilting to +X. This value corresponds to [MotionEvent.AXIS_ORIENTATION].
      */
     val azimuth: Float,
 
     /**
      * Stylus barrel rotation.
      *
-     * This is the barrel rotation of the stylus in degrees, from 0deg to 360deg. At current moment,
-     * there is no known [android.view.MotionEvent] axis for stylus barrel rotation, but there is
-     * at least 1 device with barrel rotation (Movinkpad Pro 14 + Art Pen 2). Further testing is
-     * required to determine the correct axis.
+     * This is the barrel rotation of the stylus in degrees, from -180deg to 180deg. At current
+     * moment, there is at least 1 device with barrel rotation (Movinkpad Pro 14 + Art Pen 2). This
+     * value corresponds to [MotionEvent.AXIS_RZ].
      */
     val rotation: Float,
 
@@ -105,7 +104,7 @@ data class StylusInput(
             val pressure = next.getAxisValue(MotionEvent.AXIS_PRESSURE, i)
             val altitude = 90f - next.getAxisValue(MotionEvent.AXIS_TILT, i) * 180f / PI_F
             val azimuth = next.getAxisValue(MotionEvent.AXIS_ORIENTATION, i) * 180f / PI_F
-            val rotation = 0f
+            val rotation = next.getAxisValue(MotionEvent.AXIS_RZ) * 180f / PI_F
             return StylusInput(time, x, y, velocity, pressure, altitude, azimuth, rotation, strokeJitter)
         }
     }

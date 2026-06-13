@@ -74,7 +74,7 @@ sealed interface Sensor {
     object Rotation : Sensor {
         override val nameRes: Int = R.string.sensor_rotation
         override val iconRes: Int = R.drawable.rotate_left_24px
-        override fun forInput(input: StylusInput): Float = input.rotation
+        override fun forInput(input: StylusInput): Float = (input.rotation + 180f) / 360f
     }
 
     /**
