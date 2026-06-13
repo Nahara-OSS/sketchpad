@@ -7,19 +7,29 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalGridApi
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
@@ -35,6 +45,10 @@ import io.github.naharaoss.skpd.toolbar.ui.ToolbarOverlay
 import io.github.naharaoss.skpd.ui.component.FancyDialog
 import io.github.naharaoss.skpd.ui.component.FancyDialogText
 import io.github.naharaoss.skpd.ui.theme.SketchpadTheme
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 /**
  * The activity for Sketchpad documents. Open this activity with document UID to open existing
@@ -83,23 +97,55 @@ class DocumentActivity : ComponentActivity() {
             val windowSizeClass = calculateWindowSizeClass(this)
             var showBrushList by remember { mutableStateOf(false) }
 
+            val scope = rememberCoroutineScope()
+            val hasSelectedLayer by remember {
+                documentViewModel.activeLayer
+                    .map { it != null }
+                    .distinctUntilChanged()
+                    .stateIn(
+                        scope = scope,
+                        started = SharingStarted.Eagerly,
+                        initialValue = true
+                    )
+            }.collectAsState()
+
             BackHandler(enabled = showBrushList) {
                 showBrushList = false
             }
 
             SketchpadTheme {
-                AndroidView(
-                    modifier = Modifier.fillMaxSize(),
-                    factory = { RegularDocumentView(it).also(documentViewModel::setView) }
-                )
+                Box(Modifier.fillMaxSize()) {
+                    AndroidView(
+                        modifier = Modifier.fillMaxSize(),
+                        factory = { RegularDocumentView(it).also(documentViewModel::setView) }
+                    )
 
-                ToolbarOverlay(
-                    modifier = Modifier.fillMaxSize(),
-                    undockedPadding = 8.dp,
-                    toolbarViewModel = toolbarViewModel,
-                    windowSizeClass = windowSizeClass,
-                    onCloseDocument = { finish() }
-                )
+                    ToolbarOverlay(
+                        modifier = Modifier.fillMaxSize(),
+                        undockedPadding = 8.dp,
+                        toolbarViewModel = toolbarViewModel,
+                        windowSizeClass = windowSizeClass,
+                        onCloseDocument = { finish() }
+                    )
+
+                    AnimatedVisibility(
+                        modifier = Modifier.align(Alignment.Center),
+                        visible = !hasSelectedLayer,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            tonalElevation = 2.dp,
+                            shadowElevation = 2.dp
+                        ) {
+                            Text(
+                                modifier = Modifier.padding(16.dp),
+                                text = "No layer selected!"
+                            )
+                        }
+                    }
+                }
             }
         }
     }
